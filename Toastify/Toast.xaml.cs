@@ -311,7 +311,7 @@ namespace Toastify
 
             // this is a convenient place to reset the idle timer (if so asked)
             // as this will be triggered when a song is played. The primary problem is if there is a
-            // particularly long song then this will not work. That said, this is the safest (in terms of 
+            // particularly long song then this will not work. That said, this is the safest (in terms of
             // not causing a user's computer from never sleeping).
             if (settings.PreventSleepWhilePlaying)
             {
@@ -361,7 +361,7 @@ namespace Toastify
 
             if (!System.Windows.Forms.Screen.AllScreens.Any(s => s.WorkingArea.Contains(rect)))
             {
-                // get the defaults, but don't save them (this allows the user to reconnect their screen and get their 
+                // get the defaults, but don't save them (this allows the user to reconnect their screen and get their
                 // desired settings back)
                 var position = ScreenHelper.GetDefaultToastPosition(this.Width, this.Height);
 
@@ -369,7 +369,7 @@ namespace Toastify
                 this.Top = position.Y;
             }
         }
-        
+
         private void FadeOut(bool now = false)
         {
             // 16 == one frame (0 is not a valid interval)
@@ -386,7 +386,7 @@ namespace Toastify
 
                 minimizeTimer.Elapsed += (s, ev) =>
                 {
-                    Dispatcher.Invoke((Action)delegate 
+                    Dispatcher.Invoke((Action)delegate
                     {
                         this.WindowState = WindowState.Minimized;
 
@@ -510,7 +510,7 @@ namespace Toastify
 
         /// <summary>
         /// If the same hotkey press happens within this buffer time, it will be ignored.
-        /// 
+        ///
         /// I came to 150 by pressing keys as quickly as possibly. The minimum time was less than 150
         /// but most values fell in the 150 to 200 range for quick presses, so 150 seemed the most reasonable
         /// </summary>
@@ -519,9 +519,9 @@ namespace Toastify
         internal static void ActionHookCallback(Hotkey hotkey)
         {
             // Bug 9421: ignore this keypress if it is the same as the previous one and it's been less than
-            //           WAIT_BETWEEN_HOTKEY_PRESS since the last press. Note that we do not update 
+            //           WAIT_BETWEEN_HOTKEY_PRESS since the last press. Note that we do not update
             //           _lastHotkeyPressTime in this case to avoid being trapped in a never ending cycle of
-            //           ignoring keypresses if the user (for some reason) decides to press really quickly, 
+            //           ignoring keypresses if the user (for some reason) decides to press really quickly,
             //           really often on the hotkey
             if (hotkey == _lastHotkey && DateTime.Now.Subtract(_lastHotkeyPressTime).TotalMilliseconds < WAIT_BETWEEN_HOTKEY_PRESS)
                 return;
@@ -707,8 +707,8 @@ namespace Toastify
                         {
                             toastIcon = currentTrack.CoverArtUrl;
 
-                            Title1.Text = currentTrack.Artist;
-                            Title2.Text = currentTrack.Track;
+                            Title1.Text = currentTrack.Track;
+                            Title2.Text = currentTrack.Artist;
                         }
                     }
 
