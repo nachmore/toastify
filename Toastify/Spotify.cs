@@ -318,7 +318,7 @@ namespace Toastify
 
         private static IntPtr GetSpotify()
         {
-            var windowClassName = "SpotifyMainWindow";
+            var windowClassName = "Chrome_WidgetWin_0";
 
             return Win32.FindWindow(windowClassName, null);
         }
