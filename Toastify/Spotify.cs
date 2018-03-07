@@ -9,15 +9,11 @@ using System.IO;
 using System.Reflection;
 using System.Net;
 using Newtonsoft.Json;
-using System.Diagnostics;
 
 namespace Toastify
 {
     internal class Win32
     {
-
-        [DllImport("user32.dll", SetLastError = true)]
-        internal static extern IntPtr FindWindowEx(IntPtr hWndParent, IntPtr hWndChildAfter, string lpClassName, string lpWindowName);
 
         [DllImport("user32.dll", SetLastError = true)]
         internal static extern IntPtr FindWindow(string lpClassName, string lpWindowName);
