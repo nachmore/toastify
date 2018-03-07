@@ -14,6 +14,7 @@ namespace Toastify
 {
     internal class Win32
     {
+
         [DllImport("user32.dll", SetLastError = true)]
         internal static extern IntPtr FindWindow(string lpClassName, string lpWindowName);
 
@@ -21,10 +22,10 @@ namespace Toastify
 
         [DllImport("user32.dll")]
         internal static extern bool EnumWindows(EnumWindowsProc enumProc, IntPtr lParam);
-        
+
         [DllImport("user32.dll")]
         internal static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint lpdwProcessId);
-        
+
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
         internal static extern IntPtr SendMessage(IntPtr hWnd, int msg, IntPtr wParam, IntPtr lParam);
 
@@ -318,9 +319,16 @@ namespace Toastify
 
         private static IntPtr GetSpotify()
         {
-            var windowClassName = "SpotifyMainWindow";
+            var procs = System.Diagnostics.Process.GetProcessesByName("Spotify");
 
-            return Win32.FindWindow(windowClassName, null);
+            foreach (var proc in procs)
+            {
+                if (proc.MainWindowHandle != IntPtr.Zero)
+                {
+                    return proc.MainWindowHandle;
+                }
+            }
+            return IntPtr.Zero;
         }
 
         public static bool IsRunning()
@@ -429,7 +437,7 @@ namespace Toastify
 
                 if (response != null)
                 {
-                    Telemetry.TrackEvent(TelemetryCategory.SpotifyWebService, Telemetry.TelemetryEvent.SpotifyWebService.NetworkError, 
+                    Telemetry.TrackEvent(TelemetryCategory.SpotifyWebService, Telemetry.TelemetryEvent.SpotifyWebService.NetworkError,
                         "URL: " + spotifyTrackSearchURL + " \nError Code: " + response.StatusCode + " Dump: " + e.ToString());
                 }
                 else
@@ -448,7 +456,7 @@ namespace Toastify
                                         jsonResponse.Substring(0,
                                             jsonResponse.Length > 100 ? 100 : jsonResponse.Length));
 
-                Telemetry.TrackEvent(TelemetryCategory.SpotifyWebService, Telemetry.TelemetryEvent.SpotifyWebService.ResponseError, "URL: " + spotifyTrackSearchURL + " \nType: " + e.GetType().Name + " JSON excerpt: " + jsonSubstring +" dump: " + e.ToString());
+                Telemetry.TrackEvent(TelemetryCategory.SpotifyWebService, Telemetry.TelemetryEvent.SpotifyWebService.ResponseError, "URL: " + spotifyTrackSearchURL + " \nType: " + e.GetType().Name + " JSON excerpt: " + jsonSubstring + " dump: " + e.ToString());
 
                 throw;
             }
