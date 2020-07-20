@@ -30,9 +30,8 @@ namespace Toastify
             if (volume == null)
                 return null;
 
-            float level;
-            volume.GetMasterVolume(out level);
-            return level * 100;
+      volume.GetMasterVolume(out float level);
+      return level * 100;
         }
 
         public static bool? GetApplicationMute(string name)
@@ -41,9 +40,8 @@ namespace Toastify
             if (volume == null)
                 return null;
 
-            bool mute;
-            volume.GetMute(out mute);
-            return mute;
+      volume.GetMute(out bool mute);
+      return mute;
         }
 
         public static void SetApplicationVolume(string name, float level)
@@ -82,45 +80,36 @@ namespace Toastify
         {
             // get the speakers (1st render + multimedia) device
             IMMDeviceEnumerator deviceEnumerator = (IMMDeviceEnumerator)(new MMDeviceEnumerator());
-            IMMDevice speakers;
-            deviceEnumerator.GetDefaultAudioEndpoint(EDataFlow.eRender, ERole.eMultimedia, out speakers);
+      deviceEnumerator.GetDefaultAudioEndpoint(EDataFlow.eRender, ERole.eMultimedia, out IMMDevice speakers);
 
-            // activate the session manager. we need the enumerator
-            Guid IID_IAudioSessionManager2 = typeof(IAudioSessionManager2).GUID;
-            object o;
-            speakers.Activate(ref IID_IAudioSessionManager2, 0, IntPtr.Zero, out o);
-            IAudioSessionManager2 mgr = (IAudioSessionManager2)o;
+      // activate the session manager. we need the enumerator
+      Guid IID_IAudioSessionManager2 = typeof(IAudioSessionManager2).GUID;
+      speakers.Activate(ref IID_IAudioSessionManager2, 0, IntPtr.Zero, out object o);
+      IAudioSessionManager2 mgr = (IAudioSessionManager2)o;
 
-            // enumerate sessions for on this device
-            IAudioSessionEnumerator sessionEnumerator;
-            mgr.GetSessionEnumerator(out sessionEnumerator);
-            int count;
-            sessionEnumerator.GetCount(out count);
+      // enumerate sessions for on this device
+      mgr.GetSessionEnumerator(out IAudioSessionEnumerator sessionEnumerator);
+      sessionEnumerator.GetCount(out int count);
 
-            for (int i = 0; i < count; i++)
+      for (int i = 0; i < count; i++)
             {
-                IAudioSessionControl ctl;
-                IAudioSessionControl2 ctl2;
+        IAudioSessionControl2 ctl2;
 
-                sessionEnumerator.GetSession(i, out ctl);
+        sessionEnumerator.GetSession(i, out IAudioSessionControl ctl);
 
                 ctl2 = ctl as IAudioSessionControl2;
 
                 if (ctl2 != null)
                 {
-                    uint pid = 0;
-                    string sout1 = "";
-                    string sout2 = "";
 
-                    ctl2.GetSessionIdentifier(out sout1);
-                    ctl2.GetProcessId(out pid);
-                    ctl2.GetSessionInstanceIdentifier(out sout2);
+          ctl2.GetSessionIdentifier(out string sout1);
+          ctl2.GetProcessId(out uint pid);
+                    ctl2.GetSessionInstanceIdentifier(out string sout2);
 
                 }
 
-                string dn;
-                ctl.GetDisplayName(out dn);
-                yield return dn;
+        ctl.GetDisplayName(out string dn);
+        yield return dn;
                 Marshal.ReleaseComObject(ctl);
             }
             Marshal.ReleaseComObject(sessionEnumerator);
@@ -133,23 +122,19 @@ namespace Toastify
         {
             // get the speakers (1st render + multimedia) device
             IMMDeviceEnumerator deviceEnumerator = (IMMDeviceEnumerator)(new MMDeviceEnumerator());
-            IMMDevice speakers;
-            deviceEnumerator.GetDefaultAudioEndpoint(EDataFlow.eRender, ERole.eMultimedia, out speakers);
+      deviceEnumerator.GetDefaultAudioEndpoint(EDataFlow.eRender, ERole.eMultimedia, out IMMDevice speakers);
 
-            // activate the session manager. we need the enumerator
-            Guid IID_IAudioSessionManager2 = typeof(IAudioSessionManager2).GUID;
-            object o;
-            speakers.Activate(ref IID_IAudioSessionManager2, 0, IntPtr.Zero, out o);
-            IAudioSessionManager2 mgr = (IAudioSessionManager2)o;
+      // activate the session manager. we need the enumerator
+      Guid IID_IAudioSessionManager2 = typeof(IAudioSessionManager2).GUID;
+      speakers.Activate(ref IID_IAudioSessionManager2, 0, IntPtr.Zero, out object o);
+      IAudioSessionManager2 mgr = (IAudioSessionManager2)o;
 
-            // enumerate sessions for on this device
-            IAudioSessionEnumerator sessionEnumerator;
-            mgr.GetSessionEnumerator(out sessionEnumerator);
-            int count;
-            sessionEnumerator.GetCount(out count);
+      // enumerate sessions for on this device
+      mgr.GetSessionEnumerator(out IAudioSessionEnumerator sessionEnumerator);
+      sessionEnumerator.GetCount(out int count);
 
-            // lower case name for easier comparison with the Session ID later on
-            name = name.ToLower();
+      // lower case name for easier comparison with the Session ID later on
+      name = name.ToLower();
 
             // search for an audio session with the required name
             // Note: Since GetDisplayName only returns a real name if the application bothered to call SetDisplayName
@@ -159,23 +144,20 @@ namespace Toastify
             for (int i = 0; i < count; i++)
             {
 
-                IAudioSessionControl ctl;
-                IAudioSessionControl2 ctl2;
+        IAudioSessionControl2 ctl2;
 
-                sessionEnumerator.GetSession(i, out ctl);
+        sessionEnumerator.GetSession(i, out IAudioSessionControl ctl);
 
                 ctl2 = ctl as IAudioSessionControl2;
 
-                string dn;
-                ctl.GetDisplayName(out dn);
+        ctl.GetDisplayName(out string dn);
 
-                if (ctl2 != null)
+        if (ctl2 != null)
                 {
-                    string sessionID = "";
 
-                    ctl2.GetSessionIdentifier(out sessionID);
+          ctl2.GetSessionIdentifier(out string sessionID);
 
-                    if (sessionID.ToLower().Contains(name)) 
+          if (sessionID.ToLower().Contains(name)) 
                     {
                         volumeControl = ctl as ISimpleAudioVolume;
                         break;

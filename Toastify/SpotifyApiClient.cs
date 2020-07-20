@@ -23,10 +23,10 @@ namespace Toastify
       }
     }
     */
-    private static string _CLIENT_ID = "CHANGEME";
-    private static string _CLIENT_SECRET = "CHANGEME";
+    private static readonly string _CLIENT_ID = "CHANGEME";
+    private static readonly string _CLIENT_SECRET = "CHANGEME";
 
-    private static SpotifyClientConfig _spotifyClientConfig = SpotifyClientConfig.CreateDefault();
+    private static readonly SpotifyClientConfig _spotifyClientConfig = SpotifyClientConfig.CreateDefault();
     private static ClientCredentialsTokenResponse _tokenResponse;
 
     private static SpotifyClient _spotifyClient;

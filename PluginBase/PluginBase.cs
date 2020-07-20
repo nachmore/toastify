@@ -2,7 +2,7 @@
 
 namespace Toastify.Plugin
 {
-    public interface PluginBase : IDisposable
+    public interface IPluginBase : IDisposable
     {
         /// <summary>
         /// Is called directly after the constructor.

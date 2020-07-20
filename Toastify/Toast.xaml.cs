@@ -35,7 +35,7 @@ namespace Toastify
         private VersionChecker versionChecker;
         private bool isUpdateToast = false;
 
-        internal List<PluginBase> Plugins { get; set; }
+        internal List<IPluginBase> Plugins { get; set; }
 
         internal static Toast Current { get; private set; }
 
@@ -102,32 +102,40 @@ namespace Toastify
             //Init toast(color settings)
             InitToast();
 
-            //Init tray icon
-            trayIcon = new System.Windows.Forms.NotifyIcon();
-            trayIcon.Icon = Toastify.Properties.Resources.spotifyicon;
-            trayIcon.Text = "Toastify";
-            trayIcon.Visible = true;
+      //Init tray icon
+      trayIcon = new System.Windows.Forms.NotifyIcon
+      {
+        Icon = Toastify.Properties.Resources.spotifyicon,
+        Text = "Toastify",
+        Visible = true,
 
-            trayIcon.ContextMenu = new System.Windows.Forms.ContextMenu();
+        ContextMenu = new System.Windows.Forms.ContextMenu()
+      };
 
-            //Init tray icon menu
-            System.Windows.Forms.MenuItem menuSettings = new System.Windows.Forms.MenuItem();
-            menuSettings.Text = "Settings";
-            menuSettings.Click += (s, ev) => { Settings.Launch(this); };
+      //Init tray icon menu
+      System.Windows.Forms.MenuItem menuSettings = new System.Windows.Forms.MenuItem
+      {
+        Text = "Settings"
+      };
+      menuSettings.Click += (s, ev) => { Settings.Launch(this); };
 
             trayIcon.ContextMenu.MenuItems.Add(menuSettings);
 
-            System.Windows.Forms.MenuItem menuAbout = new System.Windows.Forms.MenuItem();
-            menuAbout.Text = "About Toastify...";
-            menuAbout.Click += (s, ev) => { new About().ShowDialog(); };
+      System.Windows.Forms.MenuItem menuAbout = new System.Windows.Forms.MenuItem
+      {
+        Text = "About Toastify..."
+      };
+      menuAbout.Click += (s, ev) => { new About().ShowDialog(); };
 
             trayIcon.ContextMenu.MenuItems.Add(menuAbout);
 
             trayIcon.ContextMenu.MenuItems.Add("-");
 
-            System.Windows.Forms.MenuItem menuExit = new System.Windows.Forms.MenuItem();
-            menuExit.Text = "Exit";
-            menuExit.Click += (s, ev) => { Application.Current.Shutdown(); }; //this.Close(); };
+      System.Windows.Forms.MenuItem menuExit = new System.Windows.Forms.MenuItem
+      {
+        Text = "Exit"
+      };
+      menuExit.Click += (s, ev) => { Application.Current.Shutdown(); }; //this.Close(); };
 
             trayIcon.ContextMenu.MenuItems.Add(menuExit);
 
@@ -170,7 +178,7 @@ namespace Toastify
                 watchTimer.Enabled = true; //Only need to be enabled if we are going to show the toast.
 
             versionChecker = new VersionChecker();
-            versionChecker.CheckVersionComplete += new EventHandler<CheckVersionCompleteEventArgs>(versionChecker_CheckVersionComplete);
+            versionChecker.CheckVersionComplete += new EventHandler<CheckVersionCompleteEventArgs>(VersionChecker_CheckVersionComplete);
             versionChecker.BeginCheckVersion();
 
             // TODO: right now this is pretty dumb - kick off update notifications every X hours, this might get annoying
@@ -333,13 +341,10 @@ namespace Toastify
 
             this.WindowState = WindowState.Normal;
 
-            System.Drawing.Rectangle workingArea = new System.Drawing.Rectangle((int)this.Left, (int)this.Height, (int)this.ActualWidth, (int)this.ActualHeight);
-            workingArea = System.Windows.Forms.Screen.GetWorkingArea(workingArea);
-
             this.Left = settings.PositionLeft;
             this.Top = settings.PositionTop;
 
-            ResetPositionIfOffScreen(workingArea);
+            ResetPositionIfOffScreen();
 
             DoubleAnimation anim = new DoubleAnimation(1.0, TimeSpan.FromMilliseconds(250));
             anim.Completed += (s, e) => { FadeOut(); };
@@ -348,7 +353,7 @@ namespace Toastify
             this.Topmost = true;
         }
 
-        private void ResetPositionIfOffScreen(System.Drawing.Rectangle workingArea)
+        private void ResetPositionIfOffScreen()
         {
             var rect = new System.Drawing.Rectangle((int)this.Left, (int)this.Top, (int)this.Width, (int)this.Height);
 
@@ -368,16 +373,20 @@ namespace Toastify
             // 16 == one frame (0 is not a valid interval)
             var interval = (now ? 16 : SettingsXml.Current.FadeOutTime);
 
-            DoubleAnimation anim = new DoubleAnimation(0.0, TimeSpan.FromMilliseconds(500));
-            anim.BeginTime = TimeSpan.FromMilliseconds(interval);
-            this.BeginAnimation(Window.OpacityProperty, anim);
+      DoubleAnimation anim = new DoubleAnimation(0.0, TimeSpan.FromMilliseconds(500))
+      {
+        BeginTime = TimeSpan.FromMilliseconds(interval)
+      };
+      this.BeginAnimation(Window.OpacityProperty, anim);
 
             if (minimizeTimer == null)
             {
-                minimizeTimer = new Timer();
-                minimizeTimer.AutoReset = false;
+        minimizeTimer = new Timer
+        {
+          AutoReset = false
+        };
 
-                minimizeTimer.Elapsed += (s, ev) =>
+        minimizeTimer.Elapsed += (s, ev) =>
                 {
                     Dispatcher.Invoke((Action)delegate 
                     {
@@ -395,7 +404,7 @@ namespace Toastify
             minimizeTimer.Start();
         }
 
-        void versionChecker_CheckVersionComplete(object sender, CheckVersionCompleteEventArgs e)
+        void VersionChecker_CheckVersionComplete(object sender, CheckVersionCompleteEventArgs e)
         {
             if (!e.New)
                 return;
@@ -420,14 +429,14 @@ namespace Toastify
         private void LoadPlugins()
         {
             //Load plugins
-            this.Plugins = new List<Toastify.Plugin.PluginBase>();
+            this.Plugins = new List<Toastify.Plugin.IPluginBase>();
             string applicationPath = new System.IO.FileInfo(System.Reflection.Assembly.GetExecutingAssembly().Location).DirectoryName;
 
             foreach (var p in SettingsXml.Current.Plugins)
             {
                 try
                 {
-                    var plugin = Activator.CreateInstanceFrom(System.IO.Path.Combine(applicationPath, p.FileName), p.TypeName).Unwrap() as Toastify.Plugin.PluginBase;
+                    var plugin = Activator.CreateInstanceFrom(System.IO.Path.Combine(applicationPath, p.FileName), p.TypeName).Unwrap() as Toastify.Plugin.IPluginBase;
                     plugin.Init(p.Settings);
                     this.Plugins.Add(plugin);
                 }
@@ -441,7 +450,8 @@ namespace Toastify
 
         private void AskUserToStartSpotify()
         {
-            SettingsXml settings = SettingsXml.Current;
+            // TODO: Since WebDriver is no longer a thing, should this go back to being a user setting?
+            //SettingsXml settings = SettingsXml.Current;
 
             // Thanks to recent changes in Spotify that removed the song Artist + Title from the titlebar
             // we are forced to launch Spotify ourselves (under WebDriver), so we no longer ask the user
@@ -488,14 +498,6 @@ namespace Toastify
             base.OnClosing(e);
         }
 
-        private System.Windows.Input.Key ConvertKey(System.Windows.Forms.Keys key)
-        {
-            if (Enum.GetNames(typeof(System.Windows.Input.Key)).Contains(key.ToString()))
-                return (System.Windows.Input.Key)Enum.Parse(typeof(System.Windows.Input.Key), key.ToString());
-            else
-                return Key.None;
-        }
-
         #region ActionHookCallback
 
         private static Hotkey _lastHotkey = null;
@@ -522,8 +524,6 @@ namespace Toastify
             _lastHotkey = hotkey;
             _lastHotkeyPressTime = DateTime.Now;
 
-            string currentTrack = string.Empty;
-
             try
             {
                 Song songBeforeAction = Toast.Current.currentSong;
@@ -540,7 +540,7 @@ namespace Toastify
 
                     CopySongToClipboard(songBeforeAction);
 
-                    SendPasteKey(hotkey);
+                    SendPasteKey();
                 }
                 else
                 {
@@ -561,7 +561,7 @@ namespace Toastify
             }
         }
 
-        private static void SendPasteKey(Hotkey hotkey)
+        private static void SendPasteKey()
         {
             var shiftKey = new ManagedWinapi.KeyboardKey(System.Windows.Forms.Keys.ShiftKey);
             var altKey = new ManagedWinapi.KeyboardKey(System.Windows.Forms.Keys.Alt);
@@ -641,16 +641,13 @@ namespace Toastify
 
             Song currentTrack = trackBeforeAction;
 
-            string prevTitle1 = Title1.Text;
-            string prevTitle2 = Title2.Text;
-
             switch (action)
             {
                 case SpotifyAction.PlayPause:
                     if (trackBeforeAction != null)
                     {
                         //We pressed pause
-                        Title1.Text = "Paused";
+                        Title1.Text = PAUSED_TEXT;
                         Title2.Text = trackBeforeAction.ToString();
                         FadeIn();
                     }
@@ -658,7 +655,7 @@ namespace Toastify
                     break;
                 case SpotifyAction.Stop:
                     currentSong = null;
-                    Title1.Text = "Stopped";
+                    Title1.Text = STOPPED_TEXT;
                     Title2.Text = trackBeforeAction.ToString();
                     FadeIn();
                     break;

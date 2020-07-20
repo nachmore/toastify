@@ -11,24 +11,23 @@ namespace Toastify
         public static void Main(string[] args)
         {
             string appSpecificGuid = "{B8F3CA50-CE27-4ffa-A812-BBE1435C9485}";
-            bool exclusive;
-            using (Mutex m = new Mutex(true, appSpecificGuid, out exclusive))
-            {
-                if (exclusive)
-                {
-                    App app = new App();
-                    app.InitializeComponent();
+      using (Mutex m = new Mutex(true, appSpecificGuid, out bool exclusive))
+      {
+        if (exclusive)
+        {
+          App app = new App();
+          app.InitializeComponent();
 
-                    LastInputDebug.Start();
+          LastInputDebug.Start();
 
-                    app.Run();
-                }
-                else
-                {
-                    MessageBox.Show("Toastify is already running!\n\nLook for the blue icon in your system tray.", "Toastify Already Running", MessageBoxButton.OK, MessageBoxImage.Information);
-                }
-            }
+          app.Run();
         }
+        else
+        {
+          MessageBox.Show("Toastify is already running!\n\nLook for the blue icon in your system tray.", "Toastify Already Running", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+      }
+    }
     }
 
     /// <summary>
