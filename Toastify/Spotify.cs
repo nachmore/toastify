@@ -9,6 +9,7 @@ using System.IO;
 using System.Reflection;
 using System.Net;
 using Newtonsoft.Json;
+using System.Diagnostics;
 
 namespace Toastify
 {
@@ -191,14 +192,62 @@ namespace Toastify
       KillProc("spotify");
     }
 
+    /// <summary>
+    /// Find a running instance of Spotify
+    /// </summary>
+    /// <returns>HWND of the Spotify window</returns>
     private static IntPtr GetSpotify()
     {
+      var rv = IntPtr.Zero;
+
       // Spotify have made things a little harder with their use of electron
       // In order to not pick up on other Electron windows, first find the process and then the window
 
-      var windowClassName = "SpotifyMainWindow";
+      // let's play nice and try to gracefully clear out all Sync processes
+      var procs = System.Diagnostics.Process.GetProcessesByName("spotify");
 
-      return Win32.FindWindow(windowClassName, null);
+      foreach (var proc in procs)
+      {
+
+        foreach (ProcessThread thread in proc.Threads)
+        {
+          Win32.EnumThreadWindows(thread.Id, (hWnd, lParam) =>
+          {
+            var sb = new StringBuilder(256);
+
+            // get the class name to check if it's of type Chome_WidgetWin_0
+            var ret = Win32.GetClassName(hWnd, sb, sb.Capacity);
+
+            if (ret != 0)
+            {
+              if (sb.ToString() == "Chrome_WidgetWin_0")
+              {
+
+                // now check to make sure that it has a title (Spotify has a couple of windows
+                // that it uses for specific controls, we don't want those
+                ret = Win32.GetWindowText(hWnd, sb, sb.Capacity);
+                if (ret != 0)
+                {
+                  if (!string.IsNullOrWhiteSpace(sb.ToString()))
+                  {
+                    rv = hWnd;
+                  }
+                }
+              }
+            }
+
+            return true;
+          }, IntPtr.Zero);
+
+          if (rv != IntPtr.Zero)
+          {
+            return rv;
+          }
+        }
+      }
+
+      // couldn't find the window
+      return rv;
     }
 
     public static bool IsRunning()
