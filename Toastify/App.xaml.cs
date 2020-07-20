@@ -6,11 +6,11 @@ namespace Toastify
 {
   //Special entry point to allow for single instance check
   public class EntryPoint
+  {
+    [STAThread]
+    public static void Main(string[] args)
     {
-        [STAThread]
-        public static void Main(string[] args)
-        {
-            string appSpecificGuid = "{B8F3CA50-CE27-4ffa-A812-BBE1435C9485}";
+      string appSpecificGuid = "{B8F3CA50-CE27-4ffa-A812-BBE1435C9485}";
       using (Mutex m = new Mutex(true, appSpecificGuid, out bool exclusive))
       {
         if (exclusive)
@@ -28,16 +28,16 @@ namespace Toastify
         }
       }
     }
-    }
+  }
 
-    /// <summary>
-    /// Interaction logic for App.xaml
-    /// </summary>
-    public partial class App : Application
+  /// <summary>
+  /// Interaction logic for App.xaml
+  /// </summary>
+  public partial class App : Application
+  {
+    private void Application_DispatcherUnhandledException(object sender, System.Windows.Threading.DispatcherUnhandledExceptionEventArgs e)
     {
-        private void Application_DispatcherUnhandledException(object sender, System.Windows.Threading.DispatcherUnhandledExceptionEventArgs e)
-        {
-            Telemetry.TrackException(e.Exception);
-        }
+      Telemetry.TrackException(e.Exception);
     }
+  }
 }

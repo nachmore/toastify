@@ -8,79 +8,79 @@ using System.Diagnostics;
 namespace Toastify
 {
   class VersionChecker
+  {
+    private static string _version;
+
+    public static string Version
     {
-        private static string _version;
+      get
+      {
+        if (_version == null)
+        {
+          var assembly = Assembly.GetExecutingAssembly();
+          var fileVersionInfo = FileVersionInfo.GetVersionInfo(assembly.Location);
 
-        public static string Version 
-        { 
-            get 
-            {
-                if (_version == null)
-                {
-                    var assembly = Assembly.GetExecutingAssembly();
-                    var fileVersionInfo = FileVersionInfo.GetVersionInfo(assembly.Location);
+          _version = fileVersionInfo.FileVersion;
 
-                    _version = fileVersionInfo.FileVersion;
+          var thirdDot = _version.LastIndexOf('.');
 
-                    var thirdDot = _version.LastIndexOf('.');
-
-                    _version = _version.Substring(0, thirdDot);
-                }
-
-                return _version;
-            } 
+          _version = _version.Substring(0, thirdDot);
         }
 
-        public string UpdateUrl { get { return "https://toastify.codeplex.com/releases/view/24273"; } }
+        return _version;
+      }
+    }
+
+    public string UpdateUrl { get { return "https://toastify.codeplex.com/releases/view/24273"; } }
 
     readonly WebClient wc;
 
-        public event EventHandler<CheckVersionCompleteEventArgs> CheckVersionComplete;
+    public event EventHandler<CheckVersionCompleteEventArgs> CheckVersionComplete;
 
-        public VersionChecker()
+    public VersionChecker()
+    {
+      wc = new WebClient();
+      wc.DownloadStringCompleted += new DownloadStringCompletedEventHandler(wc_DownloadStringCompleted);
+    }
+
+    void wc_DownloadStringCompleted(object sender, DownloadStringCompletedEventArgs e)
+    {
+      string version = string.Empty;
+      bool newVersion = false;
+
+      if (e.Cancelled == false && e.Error == null)
+      {
+        var match = Regex.Match(e.Result, "Version: (?<ver>[\\d+\\.]+)", RegexOptions.IgnoreCase | RegexOptions.Singleline);
+
+        if (match.Success)
         {
-            wc = new WebClient();
-            wc.DownloadStringCompleted += new DownloadStringCompletedEventHandler(wc_DownloadStringCompleted);
+          version = match.Groups["ver"].Value.Trim();
+          newVersion = Version != version;
         }
-
-        void wc_DownloadStringCompleted(object sender, DownloadStringCompletedEventArgs e)
-        {
-            string version = string.Empty;
-            bool newVersion = false;
-
-            if (e.Cancelled == false && e.Error == null)
-            {
-                var match = Regex.Match(e.Result, "Version: (?<ver>[\\d+\\.]+)", RegexOptions.IgnoreCase | RegexOptions.Singleline);
-
-                if (match.Success)
-                {
-                    version = match.Groups["ver"].Value.Trim();
-                    newVersion = Version != version;
-                }
-            }
+      }
 
       this.CheckVersionComplete?.Invoke(this, new CheckVersionCompleteEventArgs { Version = version, New = newVersion });
     }
 
-        public void BeginCheckVersion()
-        {
+    public void BeginCheckVersion()
+    {
       Thread t = new Thread(ThreadedBeginCheckVersion)
       {
         IsBackground = true
       };
       t.Start();
-        }
-
-        private void ThreadedBeginCheckVersion()
-        {
-            //WebClients XXXAsync isn't as async as I wanted...
-            wc.DownloadStringAsync(new Uri("http://toastify.codeplex.com/wikipage?title=Version"));
-        }
     }
 
-    class CheckVersionCompleteEventArgs : EventArgs
+    private void ThreadedBeginCheckVersion()
     {
-        public string Version { get; set; }
-        public bool New { get; set; }
+      //WebClients XXXAsync isn't as async as I wanted...
+      wc.DownloadStringAsync(new Uri("http://toastify.codeplex.com/wikipage?title=Version"));
     }
+  }
+
+  class CheckVersionCompleteEventArgs : EventArgs
+  {
+    public string Version { get; set; }
+    public bool New { get; set; }
+  }
 }

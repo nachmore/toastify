@@ -8,81 +8,81 @@ using Microsoft.Win32;
 namespace Toastify
 {
   [Serializable]
-    public class SettingsXml : INotifyPropertyChanged
+  public class SettingsXml : INotifyPropertyChanged
+  {
+
+    #region Singleton
+
+    private static SettingsXml _theOne;
+
+    public static SettingsXml Current
     {
-
-        #region Singleton
-
-        private static SettingsXml _theOne;
-
-        public static SettingsXml Current
+      get
+      {
+        if (_theOne == null)
         {
-            get
-            {
-                if (_theOne == null)
-                {
-                    _theOne = new SettingsXml();
-                }
-
-                return _theOne;
-            }
-
-            private set 
-            {
-                if (_theOne != null)
-                {
-                    _theOne.UnloadSettings();
-
-                    _theOne = value;
-
-                    _theOne.ApplySettings();
-                }
-            }
+          _theOne = new SettingsXml();
         }
 
-        #endregion
+        return _theOne;
+      }
 
-        private const string REG_KEY_STARTUP = @"Software\Microsoft\Windows\CurrentVersion\Run";
-        private const string SETTINGS_FILE   =  "Toastify.xml";
+      private set
+      {
+        if (_theOne != null)
+        {
+          _theOne.UnloadSettings();
 
-        private bool _CloseSpotifyWithToastify;
-        private bool _MinimizeSpotifyOnStartup;
-        private bool _GlobalHotKeys;
-        private bool _DisableToast;
-        private bool _OnlyShowToastOnHotkey;
-        private bool? _AlwaysStartSpotify;
-        private bool _DontPromptToStartSpotify;
-        private bool _ChangeSpotifyVolumeOnly;
-        private int _FadeOutTime;
-        private string _ToastColorTop;
-        private string _ToastColorBottom;
-        private string _ToastBorderColor;
-        private double _ToastBorderThickness;
-        private double _ToastBorderCornerRadiusTopLeft;
-        private double _ToastBorderCornerRadiusTopRight;
-        private double _ToastBorderCornerRadiusBottomRight;
-        private double _ToastBorderCornerRadiusBottomLeft;
-        private double _PositionLeft;
-        private double _PositionTop;
-        private double _ToastWidth;
-        private double _ToastHeight;
-        private string _ClipboardTemplate;
-        private bool _SaveTrackToFile;
-        private string _SaveTrackToFilePath;
-        private bool _PreventAnalytics;
-        private bool _FirstRun;
-        private string _PreviousOS;
-        private string _PreviousVersion;
-        private bool _PreventSleepWhilePlaying;
-        private List<Hotkey> _HotKeys;
-        public List<PluginDetails> Plugins { get; set; }
+          _theOne = value;
 
-        private string _settingsFile;
+          _theOne.ApplySettings();
+        }
+      }
+    }
 
-        // used for both defaults and to synchronize the list of hotkeys when upgrading versions
-        // so that any newly added hotkeys are magically visible to the user (without them having to
-        // reset their settings)
-        private readonly List<Hotkey> _defaultHotKeys = new List<Hotkey> 
+    #endregion
+
+    private const string REG_KEY_STARTUP = @"Software\Microsoft\Windows\CurrentVersion\Run";
+    private const string SETTINGS_FILE = "Toastify.xml";
+
+    private bool _CloseSpotifyWithToastify;
+    private bool _MinimizeSpotifyOnStartup;
+    private bool _GlobalHotKeys;
+    private bool _DisableToast;
+    private bool _OnlyShowToastOnHotkey;
+    private bool? _AlwaysStartSpotify;
+    private bool _DontPromptToStartSpotify;
+    private bool _ChangeSpotifyVolumeOnly;
+    private int _FadeOutTime;
+    private string _ToastColorTop;
+    private string _ToastColorBottom;
+    private string _ToastBorderColor;
+    private double _ToastBorderThickness;
+    private double _ToastBorderCornerRadiusTopLeft;
+    private double _ToastBorderCornerRadiusTopRight;
+    private double _ToastBorderCornerRadiusBottomRight;
+    private double _ToastBorderCornerRadiusBottomLeft;
+    private double _PositionLeft;
+    private double _PositionTop;
+    private double _ToastWidth;
+    private double _ToastHeight;
+    private string _ClipboardTemplate;
+    private bool _SaveTrackToFile;
+    private string _SaveTrackToFilePath;
+    private bool _PreventAnalytics;
+    private bool _FirstRun;
+    private string _PreviousOS;
+    private string _PreviousVersion;
+    private bool _PreventSleepWhilePlaying;
+    private List<Hotkey> _HotKeys;
+    public List<PluginDetails> Plugins { get; set; }
+
+    private string _settingsFile;
+
+    // used for both defaults and to synchronize the list of hotkeys when upgrading versions
+    // so that any newly added hotkeys are magically visible to the user (without them having to
+    // reset their settings)
+    private readonly List<Hotkey> _defaultHotKeys = new List<Hotkey>
             {
                 new Hotkey { Ctrl = true, Alt = true, Key = System.Windows.Input.Key.Up      , Action = SpotifyAction.PlayPause      },
                 new Hotkey { Ctrl = true, Alt = true, Key = System.Windows.Input.Key.Down    , Action = SpotifyAction.Stop           },
@@ -99,746 +99,746 @@ namespace Toastify
                 new Hotkey { Ctrl = true, Alt = true, Key = System.Windows.Input.Key.OemMinus, Action = SpotifyAction.Rewind         },
             };
 
-        /// <summary>
-        /// Returns the location of the settings file
-        /// </summary>
-        [XmlIgnore]
-        public string SettingsFile
+    /// <summary>
+    /// Returns the location of the settings file
+    /// </summary>
+    [XmlIgnore]
+    public string SettingsFile
+    {
+      get
+      {
+        if (_settingsFile == null)
         {
-            get
+          string settingsPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Toastify");
+
+          if (!Directory.Exists(settingsPath))
+          {
+            try
             {
-                if (_settingsFile == null)
-                {
-                    string settingsPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Toastify");
-
-                    if (!Directory.Exists(settingsPath))
-                    {
-                        try
-                        {
-                            Directory.CreateDirectory(settingsPath);
-                        }
-                        catch (Exception ex)
-                        {
-                            System.Diagnostics.Debug.WriteLine("Exception creating user settings directory (" + settingsPath + "). Exception: " + ex);
-
-                            // No messagebox as this should not happen (and there will be a MessageBox later on when 
-                            // settings fail to load)
-                        }
-                    }
-
-                    _settingsFile = Path.Combine(settingsPath, SETTINGS_FILE);
-                }
-
-                return _settingsFile;
+              Directory.CreateDirectory(settingsPath);
             }
+            catch (Exception ex)
+            {
+              System.Diagnostics.Debug.WriteLine("Exception creating user settings directory (" + settingsPath + "). Exception: " + ex);
+
+              // No messagebox as this should not happen (and there will be a MessageBox later on when 
+              // settings fail to load)
+            }
+          }
+
+          _settingsFile = Path.Combine(settingsPath, SETTINGS_FILE);
         }
 
-        // this is a dynamic setting depending on the existing registry key
-        // (which allows for it to be set reliably from the installer)
-        // so make sure to not include it in the XML file
-        [XmlIgnore]
-        public bool LaunchOnStartup
+        return _settingsFile;
+      }
+    }
+
+    // this is a dynamic setting depending on the existing registry key
+    // (which allows for it to be set reliably from the installer)
+    // so make sure to not include it in the XML file
+    [XmlIgnore]
+    public bool LaunchOnStartup
+    {
+      get { return IsSetToLaunchOnStartup(); }
+      set
+      {
+        NotifyPropertyChanged("LaunchOnStartup");
+
+        SetLaunchOnStartup(value);
+      }
+    }
+
+    public bool MinimizeSpotifyOnStartup
+    {
+      get { return _MinimizeSpotifyOnStartup; }
+      set
+      {
+        if (_MinimizeSpotifyOnStartup != value)
         {
-            get { return IsSetToLaunchOnStartup(); }
-            set
-            {
-                NotifyPropertyChanged("LaunchOnStartup");
-
-                SetLaunchOnStartup(value);
-            }
+          _MinimizeSpotifyOnStartup = value;
+          NotifyPropertyChanged("MinimizeSpotifyOnStartup");
         }
+      }
+    }
 
-        public bool MinimizeSpotifyOnStartup
+    public bool CloseSpotifyWithToastify
+    {
+      get { return _CloseSpotifyWithToastify; }
+      set
+      {
+        if (_CloseSpotifyWithToastify != value)
         {
-            get { return _MinimizeSpotifyOnStartup; }
-            set
-            {
-                if (_MinimizeSpotifyOnStartup != value)
-                {
-                    _MinimizeSpotifyOnStartup = value;
-                    NotifyPropertyChanged("MinimizeSpotifyOnStartup");
-                }
-            }
+          _CloseSpotifyWithToastify = value;
+          NotifyPropertyChanged("CloseSpotifyWithToastify");
         }
+      }
+    }
 
-        public bool CloseSpotifyWithToastify
+    public bool GlobalHotKeys
+    {
+      get { return _GlobalHotKeys; }
+      set
+      {
+        if (_GlobalHotKeys != value)
         {
-            get { return _CloseSpotifyWithToastify; }
-            set
-            {
-                if (_CloseSpotifyWithToastify != value)
-                {
-                    _CloseSpotifyWithToastify = value;
-                    NotifyPropertyChanged("CloseSpotifyWithToastify");
-                }
-            }
+          _GlobalHotKeys = value;
+          NotifyPropertyChanged("GlobalHotKeys");
         }
+      }
+    }
 
-        public bool GlobalHotKeys
+    public bool OnlyShowToastOnHotkey
+    {
+      get { return _OnlyShowToastOnHotkey; }
+      set
+      {
+        if (_OnlyShowToastOnHotkey != value)
         {
-            get { return _GlobalHotKeys; }
-            set
-            {
-                if (_GlobalHotKeys != value)
-                {
-                    _GlobalHotKeys = value;
-                    NotifyPropertyChanged("GlobalHotKeys");
-                }                
-            }
-        }
+          _OnlyShowToastOnHotkey = value;
 
-        public bool OnlyShowToastOnHotkey
+          NotifyPropertyChanged("OnlyShowToastOnHotkey");
+        }
+      }
+    }
+
+    public bool DisableToast
+    {
+      get { return _DisableToast; }
+      set
+      {
+        if (_DisableToast != value)
         {
-            get { return _OnlyShowToastOnHotkey; }
-            set
-            {
-                if (_OnlyShowToastOnHotkey != value)
-                {
-                    _OnlyShowToastOnHotkey = value;
+          _DisableToast = value;
 
-                    NotifyPropertyChanged("OnlyShowToastOnHotkey");
-                }
-            }
+          NotifyPropertyChanged("DisableToast");
         }
+      }
+    }
 
-        public bool DisableToast
+    public bool? AlwaysStartSpotify
+    {
+      get { return _AlwaysStartSpotify; }
+      set
+      {
+        if (_AlwaysStartSpotify != value)
         {
-            get { return _DisableToast; }
-            set
-            {
-                if (_DisableToast != value)
-                {
-                    _DisableToast = value;
+          _AlwaysStartSpotify = value;
 
-                    NotifyPropertyChanged("DisableToast");
-                }
-            }
+          NotifyPropertyChanged("AlwaysStartSpotify");
         }
+      }
+    }
 
-        public bool? AlwaysStartSpotify
+    public bool DontPromptToStartSpotify
+    {
+      get { return _DontPromptToStartSpotify; }
+      set
+      {
+        if (_DontPromptToStartSpotify != value)
         {
-            get { return _AlwaysStartSpotify; }
-            set
-            {
-                if (_AlwaysStartSpotify != value)
-                {
-                    _AlwaysStartSpotify = value;
+          _DontPromptToStartSpotify = value;
 
-                    NotifyPropertyChanged("AlwaysStartSpotify");
-                }
-            }
+          NotifyPropertyChanged("DontPromptToStartSpotify");
         }
+      }
+    }
 
-        public bool DontPromptToStartSpotify 
-        { 
-            get { return _DontPromptToStartSpotify; }
-            set
-            {
-                if (_DontPromptToStartSpotify != value)
-                {
-                    _DontPromptToStartSpotify = value;
-
-                    NotifyPropertyChanged("DontPromptToStartSpotify");
-                }
-            }
-        }
-
-        public bool ChangeSpotifyVolumeOnly
+    public bool ChangeSpotifyVolumeOnly
+    {
+      get { return _ChangeSpotifyVolumeOnly; }
+      set
+      {
+        if (_ChangeSpotifyVolumeOnly != value)
         {
-            get { return _ChangeSpotifyVolumeOnly; }
-            set
-            {
-                if (_ChangeSpotifyVolumeOnly != value)
-                {
-                    _ChangeSpotifyVolumeOnly = value;
+          _ChangeSpotifyVolumeOnly = value;
 
-                    NotifyPropertyChanged("ChangeSpotifyVolumeOnly");
-                }
-            }
+          NotifyPropertyChanged("ChangeSpotifyVolumeOnly");
         }
+      }
+    }
 
-        public int FadeOutTime
+    public int FadeOutTime
+    {
+      get { return _FadeOutTime; }
+      set
+      {
+        if (_FadeOutTime != value)
         {
-            get { return _FadeOutTime; }
-            set
-            {
-                if (_FadeOutTime != value)
-                {
-                    _FadeOutTime = value;
+          _FadeOutTime = value;
 
-                    NotifyPropertyChanged("FadeOutTime");
-                }
-            }
+          NotifyPropertyChanged("FadeOutTime");
         }
+      }
+    }
 
-        public string ToastColorTop
+    public string ToastColorTop
+    {
+      get { return _ToastColorTop; }
+      set
+      {
+        if (_ToastColorTop != value)
         {
-            get { return _ToastColorTop; }
-            set
-            {
-                if (_ToastColorTop != value)
-                {
-                    _ToastColorTop = value;
+          _ToastColorTop = value;
 
-                    NotifyPropertyChanged("ToastColorTop");
-                }
-            }
+          NotifyPropertyChanged("ToastColorTop");
         }
+      }
+    }
 
-        public string ToastColorBottom
+    public string ToastColorBottom
+    {
+      get { return _ToastColorBottom; }
+      set
+      {
+        if (_ToastColorBottom != value)
         {
-            get { return _ToastColorBottom; }
-            set
-            {
-                if (_ToastColorBottom != value)
-                {
-                    _ToastColorBottom = value;
+          _ToastColorBottom = value;
 
-                    NotifyPropertyChanged("ToastColorBottom");
-                }
-            }
+          NotifyPropertyChanged("ToastColorBottom");
         }
+      }
+    }
 
-        public string ToastBorderColor
+    public string ToastBorderColor
+    {
+      get { return _ToastBorderColor; }
+      set
+      {
+        if (_ToastBorderColor != value)
         {
-            get { return _ToastBorderColor; }
-            set
-            {
-                if (_ToastBorderColor != value)
-                {
-                    _ToastBorderColor = value;
+          _ToastBorderColor = value;
 
-                    NotifyPropertyChanged("ToastBorderColor");
-                }
-            }
+          NotifyPropertyChanged("ToastBorderColor");
         }
+      }
+    }
 
-        public double ToastBorderThickness
+    public double ToastBorderThickness
+    {
+      get { return _ToastBorderThickness; }
+      set
+      {
+        if (value < 0)
+          throw new ArgumentException("Value must be a positive number");
+
+        if (_ToastBorderThickness != value)
         {
-            get { return _ToastBorderThickness; }
-            set
-            {
-                if (value < 0)
-                    throw new ArgumentException("Value must be a positive number");
+          _ToastBorderThickness = value;
 
-                if (_ToastBorderThickness != value)
-                {
-                    _ToastBorderThickness = value;
-
-                    NotifyPropertyChanged("ToastBorderThickness");
-                }
-            }
+          NotifyPropertyChanged("ToastBorderThickness");
         }
+      }
+    }
 
-        public double ToastBorderCornerRadiusTopLeft
+    public double ToastBorderCornerRadiusTopLeft
+    {
+      get { return _ToastBorderCornerRadiusTopLeft; }
+      set
+      {
+        if (value < 0)
+          throw new ArgumentException("Value must be a positive number");
+
+        if (_ToastBorderCornerRadiusTopLeft != value)
         {
-            get { return _ToastBorderCornerRadiusTopLeft; }
-            set
-            {
-                if (value < 0)
-                    throw new ArgumentException("Value must be a positive number");
+          _ToastBorderCornerRadiusTopLeft = value;
 
-                if (_ToastBorderCornerRadiusTopLeft != value)
-                {
-                    _ToastBorderCornerRadiusTopLeft = value;
-
-                    NotifyPropertyChanged("ToastBorderCornerRadiusTopLeft");
-                }
-            }
+          NotifyPropertyChanged("ToastBorderCornerRadiusTopLeft");
         }
+      }
+    }
 
-        public double ToastBorderCornerRadiusTopRight
+    public double ToastBorderCornerRadiusTopRight
+    {
+      get { return _ToastBorderCornerRadiusTopRight; }
+      set
+      {
+        if (value < 0)
+          throw new ArgumentException("Value must be a positive number");
+
+        if (_ToastBorderCornerRadiusTopRight != value)
         {
-            get { return _ToastBorderCornerRadiusTopRight; }
-            set
-            {
-                if (value < 0)
-                    throw new ArgumentException("Value must be a positive number");
+          _ToastBorderCornerRadiusTopRight = value;
 
-                if (_ToastBorderCornerRadiusTopRight != value)
-                {
-                    _ToastBorderCornerRadiusTopRight = value;
-
-                    NotifyPropertyChanged("ToastBorderCornerRadiusTopRight");
-                }
-            }
+          NotifyPropertyChanged("ToastBorderCornerRadiusTopRight");
         }
+      }
+    }
 
-        public double ToastBorderCornerRadiusBottomRight
+    public double ToastBorderCornerRadiusBottomRight
+    {
+      get { return _ToastBorderCornerRadiusBottomRight; }
+      set
+      {
+        if (value < 0)
+          throw new ArgumentException("Value must be a positive number");
+
+        if (_ToastBorderCornerRadiusBottomRight != value)
         {
-            get { return _ToastBorderCornerRadiusBottomRight; }
-            set
-            {
-                if (value < 0)
-                    throw new ArgumentException("Value must be a positive number");
+          _ToastBorderCornerRadiusBottomRight = value;
 
-                if (_ToastBorderCornerRadiusBottomRight != value)
-                {
-                    _ToastBorderCornerRadiusBottomRight = value;
-
-                    NotifyPropertyChanged("ToastBorderCornerRadiusBottomRight");
-                }
-            }
+          NotifyPropertyChanged("ToastBorderCornerRadiusBottomRight");
         }
+      }
+    }
 
-        public double ToastBorderCornerRadiusBottomLeft
+    public double ToastBorderCornerRadiusBottomLeft
+    {
+      get { return _ToastBorderCornerRadiusBottomLeft; }
+      set
+      {
+        if (value < 0)
+          throw new ArgumentException("Value must be a positive number");
+
+        if (_ToastBorderCornerRadiusBottomLeft != value)
         {
-            get { return _ToastBorderCornerRadiusBottomLeft; }
-            set
-            {
-                if (value < 0)
-                    throw new ArgumentException("Value must be a positive number");
+          _ToastBorderCornerRadiusBottomLeft = value;
 
-                if (_ToastBorderCornerRadiusBottomLeft != value)
-                {
-                    _ToastBorderCornerRadiusBottomLeft = value;
-
-                    NotifyPropertyChanged("ToastBorderCornerRadiusBottomLeft");
-                }
-            }
+          NotifyPropertyChanged("ToastBorderCornerRadiusBottomLeft");
         }
+      }
+    }
 
-        public double ToastWidth
+    public double ToastWidth
+    {
+      get { return _ToastWidth; }
+      set
+      {
+        if (value < 0)
+          throw new ArgumentException("Value must be a positive number");
+
+        if (_ToastWidth != value)
         {
-            get { return _ToastWidth; }
-            set
-            {
-                if (value < 0)
-                    throw new ArgumentException("Value must be a positive number");
+          _ToastWidth = value;
 
-                if (_ToastWidth != value)
-                {
-                    _ToastWidth = value;
-
-                    NotifyPropertyChanged("ToastWidth");
-                }
-            }
+          NotifyPropertyChanged("ToastWidth");
         }
+      }
+    }
 
-        public double ToastHeight
+    public double ToastHeight
+    {
+      get { return _ToastHeight; }
+      set
+      {
+        if (value < 0)
+          throw new ArgumentException("Value must be a positive number");
+
+        if (_ToastHeight != value)
         {
-            get { return _ToastHeight; }
-            set
-            {
-                if (value < 0)
-                    throw new ArgumentException("Value must be a positive number");
+          _ToastHeight = value;
 
-                if (_ToastHeight != value)
-                {
-                    _ToastHeight = value;
-
-                    NotifyPropertyChanged("ToastHeight");
-                }
-            }
+          NotifyPropertyChanged("ToastHeight");
         }
+      }
+    }
 
-        public double PositionLeft
+    public double PositionLeft
+    {
+      get { return _PositionLeft; }
+      set
+      {
+        if (_PositionLeft != value)
         {
-            get { return _PositionLeft; }
-            set
-            {
-                if (_PositionLeft != value)
-                {
-                    _PositionLeft = value;
+          _PositionLeft = value;
 
-                    NotifyPropertyChanged("PositionLeft");
-                }
-            }
+          NotifyPropertyChanged("PositionLeft");
         }
+      }
+    }
 
-        public double PositionTop
+    public double PositionTop
+    {
+      get { return _PositionTop; }
+      set
+      {
+        if (_PositionTop != value)
         {
-            get { return _PositionTop; }
-            set
-            {
-                if (_PositionTop != value)
-                {
-                    _PositionTop = value;
+          _PositionTop = value;
 
-                    NotifyPropertyChanged("PositionTop");
-                }
-            }
+          NotifyPropertyChanged("PositionTop");
         }
+      }
+    }
 
-        public string ClipboardTemplate
+    public string ClipboardTemplate
+    {
+      get { return _ClipboardTemplate; }
+      set
+      {
+        if (_ClipboardTemplate != value)
         {
-            get { return _ClipboardTemplate; }
-            set
-            {
-                if (_ClipboardTemplate != value)
-                {
-                    _ClipboardTemplate = value;
+          _ClipboardTemplate = value;
 
-                    NotifyPropertyChanged("ClipboardTemplate");
-                }
-            }
+          NotifyPropertyChanged("ClipboardTemplate");
         }
+      }
+    }
 
-        public bool SaveTrackToFile
+    public bool SaveTrackToFile
+    {
+      get { return _SaveTrackToFile; }
+      set
+      {
+        if (_SaveTrackToFile != value)
         {
-            get { return _SaveTrackToFile; }
-            set
-            {
-                if (_SaveTrackToFile != value)
-                {
-                    _SaveTrackToFile = value;
+          _SaveTrackToFile = value;
 
-                    NotifyPropertyChanged("SaveTrackToFile");
-                }
-            }
+          NotifyPropertyChanged("SaveTrackToFile");
         }
+      }
+    }
 
-        public string SaveTrackToFilePath
+    public string SaveTrackToFilePath
+    {
+      get { return _SaveTrackToFilePath; }
+      set
+      {
+        if (_SaveTrackToFilePath != value)
         {
-            get { return _SaveTrackToFilePath; }
-            set
-            {
-                if (_SaveTrackToFilePath != value)
-                {
-                    _SaveTrackToFilePath = value;
+          _SaveTrackToFilePath = value;
 
-                    NotifyPropertyChanged("SaveTrackToFilePath");
-                }
-            }
+          NotifyPropertyChanged("SaveTrackToFilePath");
         }
+      }
+    }
 
-        public bool PreventAnalytics
+    public bool PreventAnalytics
+    {
+      get { return _PreventAnalytics; }
+      set
+      {
+        if (_PreventAnalytics != value)
         {
-            get { return _PreventAnalytics; }
-            set
-            {
-                if (_PreventAnalytics != value)
-                {
-                    _PreventAnalytics = value;
+          _PreventAnalytics = value;
 
-                    NotifyPropertyChanged("PreventAnalytics");
-                }
-            }
+          NotifyPropertyChanged("PreventAnalytics");
         }
+      }
+    }
 
-        public bool FirstRun
+    public bool FirstRun
+    {
+      get { return _FirstRun; }
+      set
+      {
+        if (_FirstRun != value)
         {
-            get { return _FirstRun; }
-            set
-            {
-                if (_FirstRun != value)
-                {
-                    _FirstRun = value;
+          _FirstRun = value;
 
-                    NotifyPropertyChanged("FirstRun");
-                }
-            }
+          NotifyPropertyChanged("FirstRun");
         }
+      }
+    }
 
-        public List<Hotkey> HotKeys
+    public List<Hotkey> HotKeys
+    {
+      get { return _HotKeys; }
+      set
+      {
+        if (_HotKeys != value)
         {
-            get { return _HotKeys; }
-            set
-            {
-                if (_HotKeys != value)
-                {
-                    _HotKeys = value;
+          _HotKeys = value;
 
-                    NotifyPropertyChanged("HotKeys");
-                }
-            }
+          NotifyPropertyChanged("HotKeys");
         }
+      }
+    }
 
-        public string PreviousOS
+    public string PreviousOS
+    {
+      get { return _PreviousOS; }
+      set
+      {
+        if (_PreviousOS != value)
         {
-            get { return _PreviousOS; }
-            set
-            {
-                if (_PreviousOS != value)
-                {
-                    _PreviousOS = value;
+          _PreviousOS = value;
 
-                    NotifyPropertyChanged("PreviousOS");
-                }
-            }
+          NotifyPropertyChanged("PreviousOS");
         }
+      }
+    }
 
-        public string PreviousVersion
+    public string PreviousVersion
+    {
+      get { return _PreviousVersion; }
+      set
+      {
+        if (_PreviousVersion != value)
         {
-            get { return _PreviousVersion; }
-            set
-            {
-                if (_PreviousVersion != value)
-                {
-                    _PreviousVersion = value;
+          _PreviousVersion = value;
 
-                    NotifyPropertyChanged("PreviousVersion");
-                }
-            }
+          NotifyPropertyChanged("PreviousVersion");
         }
+      }
+    }
 
-        public bool PreventSleepWhilePlaying
+    public bool PreventSleepWhilePlaying
+    {
+      get { return _PreventSleepWhilePlaying; }
+      set
+      {
+        if (_PreventSleepWhilePlaying != value)
         {
-            get { return _PreventSleepWhilePlaying; }
-            set
-            {
-                if (_PreventSleepWhilePlaying != value)
-                {
-                    _PreventSleepWhilePlaying = value;
+          _PreventSleepWhilePlaying = value;
 
-                    NotifyPropertyChanged("PreventSleepWhilePlaying");
-                }
-            }
+          NotifyPropertyChanged("PreventSleepWhilePlaying");
         }
+      }
+    }
 
-        public void Default(bool setHotKeys = false)
-        {
-            AlwaysStartSpotify       = true;
-            DontPromptToStartSpotify = false;
-            CloseSpotifyWithToastify = true;
-            ChangeSpotifyVolumeOnly  = false;
+    public void Default(bool setHotKeys = false)
+    {
+      AlwaysStartSpotify = true;
+      DontPromptToStartSpotify = false;
+      CloseSpotifyWithToastify = true;
+      ChangeSpotifyVolumeOnly = false;
 
-            FadeOutTime   = 4000;
-            GlobalHotKeys = true;
-            DisableToast  = false;
+      FadeOutTime = 4000;
+      GlobalHotKeys = true;
+      DisableToast = false;
 
-            ToastColorTop    = "#FF000000";
-            ToastColorBottom = "#FF000000";
-            ToastBorderColor = "#FF000000";
-            
-            ToastBorderThickness = 1.0;
+      ToastColorTop = "#FF000000";
+      ToastColorBottom = "#FF000000";
+      ToastBorderColor = "#FF000000";
 
-            ToastWidth  = 300;
-            ToastHeight = 75;
+      ToastBorderThickness = 1.0;
 
-            ToastBorderCornerRadiusTopLeft     = 0;
-            ToastBorderCornerRadiusTopRight    = 0;
-            ToastBorderCornerRadiusBottomRight = 0;
-            ToastBorderCornerRadiusBottomLeft  = 0;
+      ToastWidth = 300;
+      ToastHeight = 75;
 
-            var position = ScreenHelper.GetDefaultToastPosition(ToastWidth, ToastHeight);
+      ToastBorderCornerRadiusTopLeft = 0;
+      ToastBorderCornerRadiusTopRight = 0;
+      ToastBorderCornerRadiusBottomRight = 0;
+      ToastBorderCornerRadiusBottomLeft = 0;
 
-            PositionLeft = position.X;
-            PositionTop  = position.Y;
+      var position = ScreenHelper.GetDefaultToastPosition(ToastWidth, ToastHeight);
 
-            ClipboardTemplate = "I'm currently listening to {0}";
+      PositionLeft = position.X;
+      PositionTop = position.Y;
 
-            SaveTrackToFile = false;
-            PreventAnalytics = false;
-            PreventSleepWhilePlaying = false;
+      ClipboardTemplate = "I'm currently listening to {0}";
 
-            Hotkey.ClearAll();
+      SaveTrackToFile = false;
+      PreventAnalytics = false;
+      PreventSleepWhilePlaying = false;
 
-            // only set hotkeys when it's requested (we don't set hotkeys when
-            // loading from XML since it will create duplicates)
-            if (setHotKeys)
-                HotKeys = _defaultHotKeys;
+      Hotkey.ClearAll();
 
-            Plugins = new List<PluginDetails>();
+      // only set hotkeys when it's requested (we don't set hotkeys when
+      // loading from XML since it will create duplicates)
+      if (setHotKeys)
+        HotKeys = _defaultHotKeys;
 
-            // there are a few settings that we don't really want to override when
-            // clearing settings (in fact these are more properties that we store
-            // alongside settings for convenience), so don't reset them if they have
-            // values
-            if (_theOne != null)
-            {
-                FirstRun = _theOne.FirstRun;
-                PreviousVersion = _theOne.PreviousVersion;
-                PreviousOS = _theOne.PreviousOS;
-            }
-        }
+      Plugins = new List<PluginDetails>();
 
-        public void Save(bool replaceCurrent = false)
-        {
-            using (StreamWriter sw = new StreamWriter(SettingsFile, false))
-            {
-                XmlSerializer xmlSerializer = new XmlSerializer(typeof(SettingsXml));
-                xmlSerializer.Serialize(sw, this);
-            }
+      // there are a few settings that we don't really want to override when
+      // clearing settings (in fact these are more properties that we store
+      // alongside settings for convenience), so don't reset them if they have
+      // values
+      if (_theOne != null)
+      {
+        FirstRun = _theOne.FirstRun;
+        PreviousVersion = _theOne.PreviousVersion;
+        PreviousOS = _theOne.PreviousOS;
+      }
+    }
 
-            if (replaceCurrent)
-            {
-                Current = this;
-            }
-        }
+    public void Save(bool replaceCurrent = false)
+    {
+      using (StreamWriter sw = new StreamWriter(SettingsFile, false))
+      {
+        XmlSerializer xmlSerializer = new XmlSerializer(typeof(SettingsXml));
+        xmlSerializer.Serialize(sw, this);
+      }
 
-        public void Update()
-        {
+      if (replaceCurrent)
+      {
+        Current = this;
+      }
+    }
+
+    public void Update()
+    {
       PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(String.Empty));
     }
 
-        private SettingsXml() 
+    private SettingsXml()
+    {
+      Default();
+    }
+
+    public SettingsXml Load()
+    {
+      if (!System.IO.File.Exists(SettingsFile))
+      {
+        SettingsXml.Current.Default(setHotKeys: true);
+        SettingsXml.Current.Save();
+      }
+      else
+      {
+        using (StreamReader sr = new StreamReader(SettingsFile))
         {
-            Default();
+          XmlSerializer xmlSerializer = new XmlSerializer(typeof(SettingsXml));
+          SettingsXml xml = xmlSerializer.Deserialize(sr) as SettingsXml;
+
+          xml.CheckForNewSettings();
+
+          Current = xml;
+        }
+      }
+
+      Current.SanitizeSettingsFile();
+
+      return Current;
+    }
+
+    /// <summary>
+    /// Helpful place to fix common issues with settings files
+    /// </summary>
+    private void SanitizeSettingsFile()
+    {
+      if (this._HotKeys == null)
+        return;
+
+      // let's collapse duplicate hotkeys
+      var toKeep = new List<Hotkey>();
+
+      for (int i = 0; i < _defaultHotKeys.Count; i++)
+      {
+        var current = _defaultHotKeys[i];
+        var keep = current;
+
+        for (int j = 0; j < _HotKeys.Count; j++)
+        {
+          var compare = _HotKeys[j];
+
+          if (current.Action == compare.Action && compare.Enabled)
+          {
+            keep = compare;
+          }
         }
 
-        public SettingsXml Load()
+        toKeep.Add(keep);
+      }
+
+      // deactivate all of the old hotkeys, especially duplicate ones that are active
+      foreach (var hotkey in _HotKeys)
+      {
+        if (!toKeep.Contains(hotkey))
+          hotkey.Deactivate();
+      }
+
+      _HotKeys = toKeep;
+
+      Save();
+    }
+
+    /// <summary>
+    /// Called when loading a settings file to iterate through new dynamic properties (such as Hotkeys)
+    /// which may have changed and would otherwise be hidden from the user
+    /// </summary>
+    private void CheckForNewSettings()
+    {
+      foreach (var defaultHotkey in _defaultHotKeys)
+      {
+        bool found = false;
+        foreach (var hotkey in HotKeys)
         {
-            if (!System.IO.File.Exists(SettingsFile))
-            {
-                SettingsXml.Current.Default(setHotKeys: true);
-                SettingsXml.Current.Save();
-            }
-            else
-            {
-                using (StreamReader sr = new StreamReader(SettingsFile))
-                {
-                    XmlSerializer xmlSerializer = new XmlSerializer(typeof(SettingsXml));
-                    SettingsXml xml = xmlSerializer.Deserialize(sr) as SettingsXml;
-
-                    xml.CheckForNewSettings();
-
-                    Current = xml;
-                }
-            }
-
-            Current.SanitizeSettingsFile();
-
-            return Current;
+          if (hotkey.Action == defaultHotkey.Action)
+          {
+            found = true;
+            break;
+          }
         }
 
-        /// <summary>
-        /// Helpful place to fix common issues with settings files
-        /// </summary>
-        private void SanitizeSettingsFile()
+        if (!found)
+          HotKeys.Add(defaultHotkey.Clone());
+      }
+    }
+
+    /// <summary>
+    /// Any active settings (such as hotkeys) should be triggered here
+    /// </summary>
+    private void ApplySettings()
+    {
+
+      if (GlobalHotKeys)
+      {
+        foreach (Hotkey hotkey in HotKeys)
         {
-            if (this._HotKeys == null)
-                return;
-
-            // let's collapse duplicate hotkeys
-            var toKeep = new List<Hotkey>();
-
-            for (int i = 0; i < _defaultHotKeys.Count; i++)
-            {
-                var current = _defaultHotKeys[i];
-                var keep = current;
-
-                for (int j = 0; j < _HotKeys.Count; j++)
-                {
-                    var compare = _HotKeys[j];
-
-                    if (current.Action == compare.Action && compare.Enabled)
-                    {
-                        keep = compare;
-                    }
-                }
-
-                toKeep.Add(keep);
-            }
-
-            // deactivate all of the old hotkeys, especially duplicate ones that are active
-            foreach (var hotkey in _HotKeys)
-            {
-                if (!toKeep.Contains(hotkey))
-                    hotkey.Deactivate();
-            }
-
-            _HotKeys = toKeep;
-
-            Save();
+          hotkey.Activate();
         }
+      }
+    }
 
-        /// <summary>
-        /// Called when loading a settings file to iterate through new dynamic properties (such as Hotkeys)
-        /// which may have changed and would otherwise be hidden from the user
-        /// </summary>
-        private void CheckForNewSettings()
+    private bool IsSetToLaunchOnStartup()
+    {
+      RegistryKey key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(REG_KEY_STARTUP, false);
+
+      return (key.GetValue("Toastify", null) != null);
+    }
+
+    private void SetLaunchOnStartup(bool enabled)
+    {
+      RegistryKey key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(REG_KEY_STARTUP, true);
+
+      if (enabled)
+      {
+        key.SetValue("Toastify", "\"" + System.Windows.Forms.Application.ExecutablePath + "\"");
+      }
+      else
+      {
+        key.DeleteValue("Toastify", false);
+      }
+
+      key.Close();
+    }
+
+    /// <summary>
+    /// Any active settings (such as hotkeys) should be unloaded here
+    /// </summary>
+    private void UnloadSettings()
+    {
+      if (HotKeys != null)
+      {
+        foreach (Hotkey hotkey in HotKeys)
         {
-            foreach (var defaultHotkey in _defaultHotKeys)
-            {
-                bool found = false;
-                foreach (var hotkey in HotKeys)
-                {
-                    if (hotkey.Action == defaultHotkey.Action)
-                    {
-                        found = true;
-                        break;
-                    }
-                }
-
-                if (!found)
-                    HotKeys.Add(defaultHotkey.Clone());
-            }
+          hotkey.Deactivate();
         }
+      }
+    }
 
-        /// <summary>
-        /// Any active settings (such as hotkeys) should be triggered here
-        /// </summary>
-        private void ApplySettings()
-        {
+    public SettingsXml Clone()
+    {
+      SettingsXml clone = MemberwiseClone() as SettingsXml;
 
-            if (GlobalHotKeys)
-            {
-                foreach (Hotkey hotkey in HotKeys)
-                {
-                    hotkey.Activate();
-                }
-            }
-        }
+      clone.HotKeys = new List<Hotkey>();
 
-        private bool IsSetToLaunchOnStartup()
-        {
-            RegistryKey key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(REG_KEY_STARTUP, false);
+      foreach (Hotkey key in HotKeys)
+      {
+        clone.HotKeys.Add(key.Clone());
+      }
 
-            return (key.GetValue("Toastify", null) != null);
-        }
+      return clone;
+    }
 
-        private void SetLaunchOnStartup(bool enabled)
-        {
-            RegistryKey key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(REG_KEY_STARTUP, true);
+    #region INotifyPropertyChanged
 
-            if (enabled)
-            {
-                key.SetValue("Toastify", "\"" + System.Windows.Forms.Application.ExecutablePath + "\"");
-            }
-            else
-            {
-                key.DeleteValue("Toastify", false);
-            }
+    public event PropertyChangedEventHandler PropertyChanged;
 
-            key.Close();
-        }
-
-        /// <summary>
-        /// Any active settings (such as hotkeys) should be unloaded here
-        /// </summary>
-        private void UnloadSettings()
-        {
-            if (HotKeys != null)
-            {
-                foreach (Hotkey hotkey in HotKeys)
-                {
-                    hotkey.Deactivate();
-                }
-            }
-        }
-
-        public SettingsXml Clone()
-        {
-            SettingsXml clone = MemberwiseClone() as SettingsXml;
-            
-            clone.HotKeys = new List<Hotkey>();
-
-            foreach (Hotkey key in HotKeys)
-            {
-                clone.HotKeys.Add(key.Clone());
-            }
-
-            return clone;
-        }
-
-        #region INotifyPropertyChanged
-
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        private void NotifyPropertyChanged(String info)
-        {
+    private void NotifyPropertyChanged(String info)
+    {
       PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(info));
     }
 
-        #endregion
-    }
+    #endregion
+  }
 
-    [Serializable]
-    public class PluginDetails
-    {
-        public string FileName { get; set; }
-        public string TypeName { get; set; }
-        public string Settings { get; set; }
-    }
+  [Serializable]
+  public class PluginDetails
+  {
+    public string FileName { get; set; }
+    public string TypeName { get; set; }
+    public string Settings { get; set; }
+  }
 }
