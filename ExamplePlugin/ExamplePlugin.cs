@@ -1,25 +1,22 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace ExamplePlugin
 {
-    //Sample Plugin. Simply logs the songs being played to a text file.
-    //A reference is added to the ToastifyApi.dll(PluginBase)
-    //The plugin class below implements the PluginBase interface
+  //Sample Plugin. Simply logs the songs being played to a text file.
+  //A reference is added to the ToastifyApi.dll(PluginBase)
+  //The plugin class below implements the PluginBase interface
 
-    
-    //Toastify.xml
-    //<Plugins>
-    //  <PluginDetails>
-    //    <FileName>ExamplePlugin.dll</FileName>                            Plugin filename
-    //    <TypeName>ExamplePlugin.ExamplePlugin/TypeName>                   Plugin type name (Namespace + "." + ClassName)
-    //    <SettingsC:\ToastifyLog.txt</Settings>                            Plugin settings data
-    //  </PluginDetails>
-    //</Plugins>
 
-    public class ExamplePlugin : Toastify.Plugin.PluginBase
+  //Toastify.xml
+  //<Plugins>
+  //  <PluginDetails>
+  //    <FileName>ExamplePlugin.dll</FileName>                            Plugin filename
+  //    <TypeName>ExamplePlugin.ExamplePlugin/TypeName>                   Plugin type name (Namespace + "." + ClassName)
+  //    <SettingsC:\ToastifyLog.txt</Settings>                            Plugin settings data
+  //  </PluginDetails>
+  //</Plugins>
+
+  public class ExamplePlugin : Toastify.Plugin.PluginBase
     {
         public ExamplePlugin()
         {

@@ -4,15 +4,13 @@ using System.Linq;
 using System.Text;
 using System.ComponentModel;
 using System.Windows.Forms;
-using System.Runtime.InteropServices;
-using System.Reflection;
 using System.Windows.Input;
 using ManagedWinapi;
 using System.Xml.Serialization;
 
 namespace Toastify
 {
-    public class Hotkey : INotifyPropertyChanged
+  public class Hotkey : INotifyPropertyChanged
     {
         private bool _enabled;
         /// <summary>

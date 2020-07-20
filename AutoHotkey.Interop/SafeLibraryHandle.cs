@@ -1,17 +1,13 @@
 ﻿using Microsoft.Win32.SafeHandles;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Runtime.ConstrainedExecution;
 using System.Runtime.InteropServices;
 using System.Security;
 using System.Security.Permissions;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace AutoHotkey.Interop
 {
-    [SecurityPermission(SecurityAction.LinkDemand, UnmanagedCode = true)]
+  [SecurityPermission(SecurityAction.LinkDemand, UnmanagedCode = true)]
     internal sealed class SafeLibraryHandle : SafeHandleZeroOrMinusOneIsInvalid
     {
         #region Native Calls
