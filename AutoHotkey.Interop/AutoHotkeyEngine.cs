@@ -1,17 +1,12 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace AutoHotkey.Interop
 {
-    /// <summary>
-    /// This class expects an AutoHotkey.dll to be available on the machine. (UNICODE) version.
-    /// </summary>
-    public class AutoHotkeyEngine
+  /// <summary>
+  /// This class expects an AutoHotkey.dll to be available on the machine. (UNICODE) version.
+  /// </summary>
+  public class AutoHotkeyEngine
     {
         public AutoHotkeyEngine()
         {

@@ -1,18 +1,14 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace AutoHotkey.Interop
 {
-    /// <summary>
-    /// These functions serve as a flat wrapper for AutoHotkey.dll.
-    /// They assume AutoHotkey.dll is in the same directory as your
-    /// executable.
-    /// </summary>
-    internal class AutoHotkeyDll
+  /// <summary>
+  /// These functions serve as a flat wrapper for AutoHotkey.dll.
+  /// They assume AutoHotkey.dll is in the same directory as your
+  /// executable.
+  /// </summary>
+  internal class AutoHotkeyDll
     {
         private const string DLLPATH = "AutoHotkey.dll";
 

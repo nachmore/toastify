@@ -1,29 +1,20 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using System.Timers;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
-using System.Windows.Interop;
 using System.Windows.Media.Imaging;
-using System.Net;
 using System.IO;
-using System.Xml.XPath;
-using System.Xml;
 using System.Diagnostics;
-using System.Web;
-using System.Runtime.InteropServices;
-using Newtonsoft.Json;
-using Garlic;
 using Toastify.Plugin;
 using System.Threading.Tasks;
 
 namespace Toastify
 {
-    public partial class Toast : Window
+  public partial class Toast : Window
     {
         private const string DEFAULT_ICON = "SpotifyToastifyLogo.png";
         private const string AD_PLAYING_ICON = "SpotifyAdPlaying.png";

@@ -1,16 +1,11 @@
-﻿using Microsoft.Win32.SafeHandles;
-using System;
-using System.Collections.Generic;
+﻿using System;
 using System.IO;
-using System.Linq;
 using System.Reflection;
-using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 
 namespace AutoHotkey.Interop
 {
-    internal static class Util
+  internal static class Util
     {
         public static string FindEmbededResourceName(Assembly assembly, string path)
         {

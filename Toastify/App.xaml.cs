@@ -1,15 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Configuration;
-using System.Data;
-using System.Linq;
 using System.Windows;
 using System.Threading;
 
 namespace Toastify
 {
-    //Special entry point to allow for single instance check
-    public class EntryPoint
+  //Special entry point to allow for single instance check
+  public class EntryPoint
     {
         [STAThread]
         public static void Main(string[] args)
