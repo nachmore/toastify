@@ -10,6 +10,9 @@ using System.Reflection;
 using System.Net;
 using Newtonsoft.Json;
 using System.Diagnostics;
+using SpotifyAPI.Web;
+using System.Threading.Tasks;
+using System.Text.RegularExpressions;
 
 namespace Toastify
 {
@@ -159,8 +162,8 @@ namespace Toastify
           uint processId = 0;
           Win32.GetWindowThreadProcessId(hWnd, out processId);
 
-                  // Essentially: Find every hWnd associated with this process and ask it to go away
-                  if (processId == (uint)lParam)
+          // Essentially: Find every hWnd associated with this process and ask it to go away
+          if (processId == (uint)lParam)
           {
             Win32.SendMessage(hWnd, Win32.Constants.WM_CLOSE, IntPtr.Zero, IntPtr.Zero);
             Win32.SendMessage(hWnd, Win32.Constants.WM_QUIT, IntPtr.Zero, IntPtr.Zero);
@@ -291,99 +294,46 @@ namespace Toastify
       return null;
     }
 
-    public static void SetCoverArt(Song song)
+    public static async Task SetCoverArt(Song song)
     {
       // probably an ad, don't bother looking for an image
       if (string.IsNullOrWhiteSpace(song.Track) || string.IsNullOrWhiteSpace(song.Artist))
         return;
 
-      string imageUrl = null;
-      string spotifyTrackSearchURL = null;
-      var jsonResponse = string.Empty;
+      // remove characters known to intefere with searching
+      var reRemoveChars = new Regex("[/()\"]");
 
-      try
+      var artist = reRemoveChars.Replace(song.Artist, "");
+      var track = reRemoveChars.Replace(song.Track, "");
+
+      var spotifyWeb = await SpotifyApiClient.GetAsync();
+
+      var searchRequest = new SearchRequest(SearchRequest.Types.Track, $"{track} artist:{artist}");
+      var searchResponse = await spotifyWeb.Search.Item(searchRequest);
+
+      if (searchResponse.Tracks.Items.Count > 0)
       {
-        // Spotify now have a full supported JSON-based web API that we can use to grab album art from tracks. Example URL:
-        // https://api.spotify.com/v1/search?query=track%3A%22Eagle%22+artist%3Aabba&offset=0&type=track
-        //
-        // Documentation: https://developer.spotify.com/web-api/migration-guide/ (great overview of functionality, even though it's a comparison guide)
-
-        // temporary workaround for https://github.com/spotify/web-api/issues/191
-        // essentially '/' is considered illegal, so we replace it with ' ' which generally returns the correct result
-        var artist = song.Artist.Replace('/', ' ');
-        var track = song.Track.Replace('/', ' ');
-
-        spotifyTrackSearchURL = "https://api.spotify.com/v1/search?q=track%3A%22" +
-                                    Uri.EscapeDataString(track) +
-                                    "%22+artist%3A%22" +
-                                    Uri.EscapeDataString(artist) +
-                                    "%22&type=track";
-
-        using (var wc = new WebClient())
-        {
-          jsonResponse += wc.DownloadString(spotifyTrackSearchURL);
-        }
-
-        dynamic spotifyTracks = JsonConvert.DeserializeObject(jsonResponse);
+        var images = searchResponse.Tracks.Items[0].Album.Images;
 
         // iterate through all of the images, finding the smallest ones. This is usually the last
         // one, but there is no guarantee in the docs.
-        int smallestWidth = int.MaxValue;
+        var smallestWidth = int.MaxValue;
+        string imageUrl = null;
 
-        // TryGetValue doesn't seem to work, so we're doing this old school
-        if (spotifyTracks != null &&
-            spotifyTracks.tracks != null &&
-            spotifyTracks.tracks.items != null &&
-            spotifyTracks.tracks.items.First != null &&
-            spotifyTracks.tracks.items.First.album != null &&
-            spotifyTracks.tracks.items.First.album.images != null)
+        foreach (var image in images)
         {
-          foreach (dynamic image in spotifyTracks.tracks.items.First.album.images)
+          if (image.Width < smallestWidth)
           {
-            if (image.width < smallestWidth)
-            {
-              imageUrl = image.url;
-              smallestWidth = image.width;
-            }
+            imageUrl = image.Url;
           }
         }
-      }
-      catch (WebException e)
-      {
-        System.Diagnostics.Debug.WriteLine("Web Exception grabbing Spotify track art:\n" + e);
 
-        var response = e.Response as HttpWebResponse;
-
-        if (response != null)
+        if (imageUrl != null)
         {
-          Telemetry.TrackEvent(TelemetryCategory.SpotifyWebService, Telemetry.TelemetryEvent.SpotifyWebService.NetworkError,
-              "URL: " + spotifyTrackSearchURL + " \nError Code: " + response.StatusCode + " Dump: " + e.ToString());
+          song.CoverArtUrl = imageUrl;
         }
-        else
-        {
-          Telemetry.TrackEvent(TelemetryCategory.SpotifyWebService, Telemetry.TelemetryEvent.SpotifyWebService.NetworkError,
-              "URL: " + spotifyTrackSearchURL + " \n[No Response] Dump: " + e.ToString());
-        }
-
-        throw;
       }
-      catch (Exception e)
-      {
-        System.Diagnostics.Debug.WriteLine("Exception grabbing Spotify track art:\n" + e);
-
-        var jsonSubstring = (jsonResponse == null ? null :
-                                jsonResponse.Substring(0,
-                                    jsonResponse.Length > 100 ? 100 : jsonResponse.Length));
-
-        Telemetry.TrackEvent(TelemetryCategory.SpotifyWebService, Telemetry.TelemetryEvent.SpotifyWebService.ResponseError, "URL: " + spotifyTrackSearchURL + " \nType: " + e.GetType().Name + " JSON excerpt: " + jsonSubstring + " dump: " + e.ToString());
-
-        throw;
-      }
-
-      song.CoverArtUrl = imageUrl;
     }
-
-    public static string CurrentCoverImageUrl { get; set; }
 
     private static bool IsMinimized()
     {

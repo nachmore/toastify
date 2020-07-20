@@ -19,6 +19,7 @@ using System.Runtime.InteropServices;
 using Newtonsoft.Json;
 using Garlic;
 using Toastify.Plugin;
+using System.Threading.Tasks;
 
 namespace Toastify
 {
@@ -145,10 +146,10 @@ namespace Toastify
 
             //Init watch timer
             watchTimer = new Timer(1000);
-            watchTimer.Elapsed += (s, ev) =>
+            watchTimer.Elapsed += async (s, ev) =>
             {
                 watchTimer.Stop();
-                CheckTitle();
+                await CheckTitle();
                 watchTimer.Start();
             };
 
@@ -228,7 +229,7 @@ namespace Toastify
             ToastBorder.CornerRadius = new CornerRadius(settings.ToastBorderCornerRadiusTopLeft, settings.ToastBorderCornerRadiusTopRight, settings.ToastBorderCornerRadiusBottomRight, settings.ToastBorderCornerRadiusBottomLeft);
         }
 
-        private void CheckTitle()
+        private async Task CheckTitle()
         {
             Song currentSong = Spotify.GetCurrentSong();
 
@@ -240,7 +241,7 @@ namespace Toastify
 
                 try
                 {
-                    Spotify.SetCoverArt(currentSong);
+                    await Spotify.SetCoverArt(currentSong);
                 }
                 catch
                 {
