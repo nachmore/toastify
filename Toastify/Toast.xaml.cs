@@ -18,6 +18,7 @@ using System.Web;
 using System.Runtime.InteropServices;
 using Newtonsoft.Json;
 using Garlic;
+using Toastify.Plugin;
 
 namespace Toastify
 {
@@ -42,7 +43,7 @@ namespace Toastify
         private VersionChecker versionChecker;
         private bool isUpdateToast = false;
 
-        internal List<Toastify.Plugin.PluginBase> Plugins { get; set; }
+        internal List<PluginBase> Plugins { get; set; }
 
         internal static Toast Current { get; private set; }
 
