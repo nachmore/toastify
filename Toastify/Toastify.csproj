@@ -167,6 +167,7 @@
       <DependentUpon>About.xaml</DependentUpon>
     </Compile>
     <Compile Include="VolumeHelper.cs" />
+    <Compile Include="Win32.cs" />
     <Compile Include="WinHelper.cs" />
     <Compile Include="Properties\AssemblyInfo.cs">
       <SubType>Code</SubType>
