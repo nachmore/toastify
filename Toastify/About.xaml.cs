@@ -11,7 +11,7 @@ namespace Toastify
   /// </summary>
   public partial class About : Window
     {
-        VersionChecker versionChecker;
+    readonly VersionChecker versionChecker;
 
         public About()
         {

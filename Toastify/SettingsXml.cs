@@ -82,7 +82,7 @@ namespace Toastify
         // used for both defaults and to synchronize the list of hotkeys when upgrading versions
         // so that any newly added hotkeys are magically visible to the user (without them having to
         // reset their settings)
-        private List<Hotkey> _defaultHotKeys = new List<Hotkey> 
+        private readonly List<Hotkey> _defaultHotKeys = new List<Hotkey> 
             {
                 new Hotkey { Ctrl = true, Alt = true, Key = System.Windows.Input.Key.Up      , Action = SpotifyAction.PlayPause      },
                 new Hotkey { Ctrl = true, Alt = true, Key = System.Windows.Input.Key.Down    , Action = SpotifyAction.Stop           },
@@ -659,9 +659,8 @@ namespace Toastify
 
         public void Update()
         {
-            if (PropertyChanged != null)
-                PropertyChanged(this, new PropertyChangedEventArgs(String.Empty));
-        }
+      PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(String.Empty));
+    }
 
         private SettingsXml() 
         {
@@ -829,11 +828,8 @@ namespace Toastify
 
         private void NotifyPropertyChanged(String info)
         {
-            if (PropertyChanged != null)
-            {
-                PropertyChanged(this, new PropertyChangedEventArgs(info));
-            }
-        }
+      PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(info));
+    }
 
         #endregion
     }

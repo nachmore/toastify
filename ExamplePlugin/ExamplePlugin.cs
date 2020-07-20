@@ -16,7 +16,7 @@ namespace ExamplePlugin
   //  </PluginDetails>
   //</Plugins>
 
-  public class ExamplePlugin : Toastify.Plugin.PluginBase
+  public class ExamplePlugin : Toastify.Plugin.IPluginBase
     {
         public ExamplePlugin()
         {

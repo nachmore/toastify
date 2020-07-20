@@ -14,9 +14,9 @@ namespace Toastify
   public partial class Settings : Window
     {
         public SettingsXml settings;
-        private Toast toast;
+        private readonly Toast toast;
 
-        private List<System.Windows.Input.Key> modifierKeys = new List<System.Windows.Input.Key> { System.Windows.Input.Key.LeftCtrl, System.Windows.Input.Key.RightCtrl, System.Windows.Input.Key.LeftAlt, System.Windows.Input.Key.Right, System.Windows.Input.Key.LeftShift, System.Windows.Input.Key.RightShift, System.Windows.Input.Key.LWin, System.Windows.Input.Key.RWin, System.Windows.Input.Key.System };
+        private readonly List<System.Windows.Input.Key> modifierKeys = new List<System.Windows.Input.Key> { System.Windows.Input.Key.LeftCtrl, System.Windows.Input.Key.RightCtrl, System.Windows.Input.Key.LeftAlt, System.Windows.Input.Key.Right, System.Windows.Input.Key.LeftShift, System.Windows.Input.Key.RightShift, System.Windows.Input.Key.LWin, System.Windows.Input.Key.RWin, System.Windows.Input.Key.System };
 
         private static Settings _current;
 

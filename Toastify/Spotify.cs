@@ -62,9 +62,7 @@ namespace Toastify
 
     public override bool Equals(object obj)
     {
-      var target = obj as Song;
-
-      if (target == null)
+      if (!(obj is Song target))
         return false;
 
       return (target.Artist == this.Artist && target.Track == this.Track);
@@ -153,8 +151,7 @@ namespace Toastify
         // lParam == Band Process Id, passed in below
         Win32.EnumWindows(delegate (IntPtr hWnd, IntPtr lParam)
         {
-          uint processId = 0;
-          Win32.GetWindowThreadProcessId(hWnd, out processId);
+          Win32.GetWindowThreadProcessId(hWnd, out uint processId);
 
           // Essentially: Find every hWnd associated with this process and ask it to go away
           if (processId == (uint)lParam)
@@ -257,10 +254,6 @@ namespace Toastify
       if (!Spotify.IsRunning())
         return null;
 
-      string song = "";
-      string artist = "";
-      string album = "";
-
       IntPtr hWnd = GetSpotify();
       int length = Win32.GetWindowTextLength(hWnd);
       StringBuilder sb = new StringBuilder(length + 1);
@@ -278,9 +271,9 @@ namespace Toastify
         // or in the song name will potentially display incorrectly
         var portions = title.Split(new string[] { " - " }, StringSplitOptions.None);
 
-        song = (portions.Length > 1 ? portions[1] : null);
-        artist = portions[0];
-        album = (portions.Length > 2 ? string.Join(" ", portions.Skip(2).ToArray()) : null); // take everything else that's left
+        var song = (portions.Length > 1 ? portions[1] : null);
+        var artist = portions[0];
+        var album = (portions.Length > 2 ? string.Join(" ", portions.Skip(2).ToArray()) : null); // take everything else that's left
 
         return new Song(artist, song, album);
       }
@@ -343,6 +336,8 @@ namespace Toastify
       return (placement.showCmd == Win32.Constants.SW_SHOWMINIMIZED);
     }
 
+    /*
+     *TODO: Establish is this is needed. Could be useful to bring Spotify to the front without changing focus?
     private static void ShowSpotifyWithNoActivate()
     {
       var hWnd = Spotify.GetSpotify();
@@ -355,6 +350,7 @@ namespace Toastify
 
       Win32.SetWindowPos(hWnd, (IntPtr)0, placement.rcNormalPosition.Left, placement.rcNormalPosition.Top, 0, 0, flags);
     }
+    */
 
     private static void ShowSpotify()
     {

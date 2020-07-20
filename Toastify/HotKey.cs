@@ -340,7 +340,7 @@ namespace Toastify
 
         #region Static Functions
 
-        private static List<Hotkey> _hotkeys = new List<Hotkey>();
+        private static readonly List<Hotkey> _hotkeys = new List<Hotkey>();
 
         public static void ClearAll()
         {
@@ -364,7 +364,7 @@ namespace Toastify
 
         #endregion
 
-        private ManagedWinapi.Hotkey key = new ManagedWinapi.Hotkey();
+        private readonly ManagedWinapi.Hotkey key = new ManagedWinapi.Hotkey();
 
         public Hotkey()
         {
@@ -398,10 +398,7 @@ namespace Toastify
 
         private void NotifyPropertyChanged(String info)
         {
-            if (PropertyChanged != null)
-            {
-                PropertyChanged(this, new PropertyChangedEventArgs(info));
-            }
+          PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(info));
         }
 
         #endregion

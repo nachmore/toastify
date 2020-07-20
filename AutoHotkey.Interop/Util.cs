@@ -62,7 +62,7 @@ namespace AutoHotkey.Interop
             var handle = dllHandle.Value;
         }
 
-        private static Lazy<SafeLibraryHandle> dllHandle = new Lazy<SafeLibraryHandle>(
+        private static readonly Lazy<SafeLibraryHandle> dllHandle = new Lazy<SafeLibraryHandle>(
             () => Util.LoadAutoHotKeyDll());
         private static SafeLibraryHandle LoadAutoHotKeyDll()
         {

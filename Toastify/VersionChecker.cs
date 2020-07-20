@@ -33,7 +33,7 @@ namespace Toastify
 
         public string UpdateUrl { get { return "https://toastify.codeplex.com/releases/view/24273"; } }
 
-        WebClient wc;
+    readonly WebClient wc;
 
         public event EventHandler<CheckVersionCompleteEventArgs> CheckVersionComplete;
 
@@ -59,15 +59,16 @@ namespace Toastify
                 }
             }
 
-            if (this.CheckVersionComplete != null)
-                this.CheckVersionComplete(this, new CheckVersionCompleteEventArgs { Version = version, New = newVersion });
-        }
+      this.CheckVersionComplete?.Invoke(this, new CheckVersionCompleteEventArgs { Version = version, New = newVersion });
+    }
 
         public void BeginCheckVersion()
         {
-            Thread t = new Thread(ThreadedBeginCheckVersion);
-            t.IsBackground = true;
-            t.Start();
+      Thread t = new Thread(ThreadedBeginCheckVersion)
+      {
+        IsBackground = true
+      };
+      t.Start();
         }
 
         private void ThreadedBeginCheckVersion()
