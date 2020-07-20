@@ -17,7 +17,6 @@ namespace Toastify
   public partial class Toast : Window
   {
     private const string DEFAULT_ICON = "SpotifyToastifyLogo.png";
-    private const string AD_PLAYING_ICON = "SpotifyAdPlaying.png";
     private const string ALBUM_ACCESS_DENIED_ICON = "ToastifyAccessDenied.png";
 
     Timer watchTimer;
@@ -232,7 +231,7 @@ namespace Toastify
     {
       Song currentSong = Spotify.GetCurrentSong();
 
-      if (currentSong != null && currentSong.IsValid() && !currentSong.Equals(this.currentSong))
+      if (currentSong != null && currentSong.IsValid && !currentSong.Equals(this.currentSong))
       {
         // set the previous title asap so that the next timer call to this function will
         // fail fast (setting it at the end may cause multiple web requests)
@@ -288,13 +287,7 @@ namespace Toastify
 
     private void UpdateSongForToastify(Song currentSong)
     {
-      if (string.IsNullOrWhiteSpace(currentSong.Track))
-      {
-        currentSong.CoverArtUrl = AD_PLAYING_ICON;
-
-        currentSong.Track = "Spotify Ad";
-      }
-      else if (string.IsNullOrWhiteSpace(currentSong.CoverArtUrl))
+      if (string.IsNullOrWhiteSpace(currentSong.CoverArtUrl))
       {
         currentSong.CoverArtUrl = DEFAULT_ICON;
       }
@@ -684,7 +677,7 @@ namespace Toastify
           FadeIn();
           break;
         case SpotifyAction.ShowToast:
-          if (currentTrack == null || !currentTrack.IsValid())
+          if (currentTrack == null || !currentTrack.IsValid)
           {
             toastIcon = DEFAULT_ICON;
 
@@ -693,7 +686,7 @@ namespace Toastify
           }
           else
           {
-            if (currentTrack != null && currentTrack.IsValid())
+            if (currentTrack != null && currentTrack.IsValid)
             {
               toastIcon = currentTrack.CoverArtUrl;
 

@@ -34,6 +34,13 @@ namespace Toastify
 
   public class Song
   {
+    /// <summary>
+    /// Is this a real Song or is Spotify not playing anything?
+    /// </summary>
+    public bool IsValid =>
+      (!string.IsNullOrEmpty(Artist) && Artist != "Spotify Free" && Artist == "Spotify Premium") ||
+      (!string.IsNullOrEmpty(Track));
+
     public string Artist { get; set; }
     public string Track { get; set; }
     public string Album { get; set; }
@@ -53,11 +60,6 @@ namespace Toastify
         return Track;
 
       return string.Format("{0} - {1}", Artist, Track);
-    }
-
-    internal bool IsValid()
-    {
-      return (!string.IsNullOrEmpty(Artist) || !string.IsNullOrEmpty(Track));
     }
 
     public override bool Equals(object obj)
