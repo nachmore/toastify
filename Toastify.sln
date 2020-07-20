@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2013
-VisualStudioVersion = 12.0.30723.0
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29709.97
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Plugin", "Plugin", "{64E51A59-02A2-4423-8DE1-F337D479E3B7}"
 EndProject
@@ -13,7 +13,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Installation", "Installatio
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Toastify", "Toastify\Toastify.csproj", "{CCC4A761-56D2-4188-807F-F7A547DFB031}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PluginBase", "PluginBase\PluginBase.csproj", "{4F92BE1F-A5CC-4604-9185-1F09DDAFC7B8}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Toastify.Plugin", "PluginBase\Toastify.Plugin.csproj", "{4F92BE1F-A5CC-4604-9185-1F09DDAFC7B8}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ExamplePlugin", "ExamplePlugin\ExamplePlugin.csproj", "{68F1A17D-4930-4EEC-AEEF-5DD9C9033B40}"
 EndProject
@@ -60,5 +60,8 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{4F92BE1F-A5CC-4604-9185-1F09DDAFC7B8} = {64E51A59-02A2-4423-8DE1-F337D479E3B7}
 		{68F1A17D-4930-4EEC-AEEF-5DD9C9033B40} = {64E51A59-02A2-4423-8DE1-F337D479E3B7}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {0602AE4C-26D4-4C96-9DA1-BF2F49D20381}
 	EndGlobalSection
 EndGlobal
