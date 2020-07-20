@@ -281,17 +281,9 @@ namespace Toastify
       return null;
     }
 
-    public static async Task SetCoverArt(Song song)
+    private static async Task<string> GetCoverArt(string artist, string track)
     {
-      // probably an ad, don't bother looking for an image
-      if (string.IsNullOrWhiteSpace(song.Track) || string.IsNullOrWhiteSpace(song.Artist))
-        return;
-
-      // remove characters known to intefere with searching
-      var reRemoveChars = new Regex("[/()\"]");
-
-      var artist = reRemoveChars.Replace(song.Artist, "");
-      var track = reRemoveChars.Replace(song.Track, "");
+      string imageUrl = null;
 
       var spotifyWeb = await SpotifyApiClient.GetAsync();
 
@@ -305,7 +297,6 @@ namespace Toastify
         // iterate through all of the images, finding the smallest ones. This is usually the last
         // one, but there is no guarantee in the docs.
         var smallestWidth = int.MaxValue;
-        string imageUrl = null;
 
         foreach (var image in images)
         {
@@ -314,12 +305,43 @@ namespace Toastify
             imageUrl = image.Url;
           }
         }
-
-        if (imageUrl != null)
-        {
-          song.CoverArtUrl = imageUrl;
-        }
       }
+
+      return imageUrl;
+    }
+
+    public static async Task SetCoverArt(Song song)
+    {
+      // probably an ad, don't bother looking for an image
+      if (string.IsNullOrWhiteSpace(song.Track) || string.IsNullOrWhiteSpace(song.Artist))
+        return;
+
+      // remove characters known to intefere with searching
+      var reRemoveChars = new Regex("[/()\"]");
+
+      var artist = reRemoveChars.Replace(song.Artist, "");
+      var track = reRemoveChars.Replace(song.Track, "");
+
+      var imageUrl = await GetCoverArt(artist, track);
+
+      // sometimes the words in brackets of a song name throw the search off, so if we couldn't find
+      // any songs, try removing the extra words completely 
+      if (string.IsNullOrWhiteSpace(imageUrl) && (song.Artist.Contains("(") || song.Track.Contains("(")))
+      {
+        var reRemoveBrackets = new Regex(@"\(.*\)");
+
+        artist = reRemoveChars.Replace(reRemoveBrackets.Replace(song.Artist, ""), "");
+        track = reRemoveChars.Replace(reRemoveBrackets.Replace(song.Track, ""), "");
+
+        imageUrl = await GetCoverArt(artist, track);
+
+      }
+
+      if (imageUrl != null)
+      {
+        song.CoverArtUrl = imageUrl;
+      }
+
     }
 
     private static bool IsMinimized()
