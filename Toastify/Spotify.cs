@@ -36,6 +36,8 @@ namespace Toastify
   {
     /// <summary>
     /// Is this a real Song or is Spotify not playing anything?
+    ///
+    /// Note: Window title doesn't change regardless of UI language
     /// </summary>
     public bool IsValid =>
       (!string.IsNullOrEmpty(Artist) && Artist != "Spotify Free" && Artist == "Spotify Premium") ||
