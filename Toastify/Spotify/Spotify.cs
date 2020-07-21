@@ -10,76 +10,7 @@ using System.Text.RegularExpressions;
 
 namespace Toastify
 {
-
-  public enum SpotifyAction : long
-  {
-    None = 0,
-    ShowToast = 1,
-    ShowSpotify = 2,
-    CopyTrackInfo = 3,
-    SettingsSaved = 4,
-    PasteTrackInfo = 5,
-    ThumbsUp = 6,   // not usable, left in for future (hopefully!)
-    ThumbsDown = 7, // not usable, left in for future (hopefully!)
-    PlayPause = 917504,
-    Mute = 524288,
-    VolumeDown = 589824,
-    VolumeUp = 655360,
-    Stop = 851968,
-    PreviousTrack = 786432,
-    NextTrack = 720896,
-    FastForward = 49 << 16,
-    Rewind = 50 << 16,
-  }
-
-  public class Song
-  {
-    /// <summary>
-    /// Is this a real Song or is Spotify not playing anything?
-    ///
-    /// Note: Window title doesn't change regardless of UI language
-    /// </summary>
-    public bool IsValid =>
-      (!string.IsNullOrEmpty(Artist) && Artist != "Spotify Free" && Artist != "Spotify Premium") ||
-      (!string.IsNullOrEmpty(Track));
-
-    public string Artist { get; set; }
-    public string Track { get; set; }
-    public string Album { get; set; }
-
-    public string CoverArtUrl { get; set; }
-
-    public Song(string artist, string title, string album = null)
-    {
-      Artist = artist;
-      Track = title;
-      Album = album;
-    }
-
-    public override string ToString()
-    {
-      if (Artist == null)
-        return Track;
-
-      return string.Format("{0} - {1}", Artist, Track);
-    }
-
-    public override bool Equals(object obj)
-    {
-      if (!(obj is Song target))
-        return false;
-
-      return (target.Artist == this.Artist && target.Track == this.Track);
-    }
-
-    // overriding GetHashCode is "required" when overriding Equals
-    public override int GetHashCode()
-    {
-      return base.GetHashCode();
-    }
-  }
-
-  static class Spotify
+  internal static class Spotify
   {
     /// <summary>
     /// The number of seconds for which the last GetSpotify() result is immediately returned
@@ -97,23 +28,9 @@ namespace Toastify
       if (IsRunning())
         return;
 
-      string spotifyPath = Microsoft.Win32.Registry.GetValue(@"HKEY_CURRENT_USER\Software\Spotify", string.Empty, string.Empty) as string;  //string.Empty = (Default) value
+      // spotify installs a protocol handler, "spotify:", use that to launch spotify
 
-      // try in the secondary location
-      if (string.IsNullOrEmpty(spotifyPath))
-      {
-        spotifyPath = Microsoft.Win32.Registry.GetValue(@"HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Uninstall\Spotify", "InstallLocation", string.Empty) as string;  //string.Empty = (Default) value
-      }
-
-      if (string.IsNullOrEmpty(spotifyPath))
-      {
-        throw new ArgumentException("Could not find spotify path in registry");
-      }
-
-      // launch Spotify
-      var spotifyExe = Path.Combine(spotifyPath, "spotify.exe");
-
-      System.Diagnostics.Process.Start(spotifyExe);
+      Process.Start("spotify:");
 
       if (SettingsXml.Current.MinimizeSpotifyOnStartup)
       {
@@ -125,7 +42,13 @@ namespace Toastify
         // we need to let Spotify start up before interacting with it fully. 2 seconds is a relatively 
         // safe amount of time to wait, even if the pattern is gross. (Minimize() doesn't need it since
         // it waits for the Window to appear before minimizing)
-        Thread.Sleep(2000);
+        var remainingSleep = 2000;
+
+        while (Spotify.GetSpotify() == IntPtr.Zero && remainingSleep > 0)
+        {
+          Thread.Sleep(100);
+          remainingSleep -= 100;
+        }
       }
     }
 
