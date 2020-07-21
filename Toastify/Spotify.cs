@@ -40,7 +40,7 @@ namespace Toastify
     /// Note: Window title doesn't change regardless of UI language
     /// </summary>
     public bool IsValid =>
-      (!string.IsNullOrEmpty(Artist) && Artist != "Spotify Free" && Artist == "Spotify Premium") ||
+      (!string.IsNullOrEmpty(Artist) && Artist != "Spotify Free" && Artist != "Spotify Premium") ||
       (!string.IsNullOrEmpty(Track));
 
     public string Artist { get; set; }
@@ -81,7 +81,16 @@ namespace Toastify
 
   static class Spotify
   {
+    /// <summary>
+    /// The number of seconds for which the last GetSpotify() result is immediately returned
+    /// </summary>
+    private const int _GET_SPOTIFY_RETURN_LAST_SEC = 5;
+
     private static AutoHotkey.Interop.AutoHotkeyEngine _ahk;
+
+    private static DateTime _lastGetSpotifyCall = DateTime.MinValue;
+    private static int _cachedProcId;
+    private static IntPtr _cachedHWnd;
 
     public static void StartSpotify()
     {
@@ -196,17 +205,21 @@ namespace Toastify
     /// <returns>HWND of the Spotify window</returns>
     private static IntPtr GetSpotify()
     {
+      if (DateTime.Now.Subtract(_lastGetSpotifyCall).TotalSeconds < _GET_SPOTIFY_RETURN_LAST_SEC) 
+        return _cachedHWnd;
+
+      _lastGetSpotifyCall = DateTime.Now;
       var rv = IntPtr.Zero;
 
       // Spotify have made things a little harder with their use of electron
       // In order to not pick up on other Electron windows, first find the process and then the window
+      var procs = Process.GetProcessesByName("spotify");
 
-      // let's play nice and try to gracefully clear out all Sync processes
-      var procs = System.Diagnostics.Process.GetProcessesByName("spotify");
+      if (Array.Exists(procs, proc => proc.Id == _cachedProcId))
+        return _cachedHWnd;
 
       foreach (var proc in procs)
       {
-
         foreach (ProcessThread thread in proc.Threads)
         {
           Win32.EnumThreadWindows(thread.Id, (hWnd, lParam) =>
@@ -229,6 +242,12 @@ namespace Toastify
                   if (!string.IsNullOrWhiteSpace(sb.ToString()))
                   {
                     rv = hWnd;
+
+                    _cachedProcId = proc.Id;
+                    _cachedHWnd = hWnd;
+
+                    // stop the enumeration immediately
+                    return false;
                   }
                 }
               }
