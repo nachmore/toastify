@@ -379,15 +379,14 @@ namespace Toastify
           AutoReset = false
         };
 
-        minimizeTimer.Elapsed += (s, ev) =>
-                {
-                  Dispatcher.Invoke((Action)delegate
-                  {
-                    this.WindowState = WindowState.Minimized;
-
-                    System.Diagnostics.Debug.WriteLine("Minimized");
-                  });
-                };
+        minimizeTimer.Elapsed += 
+          (s, ev) =>
+            {
+              Dispatcher.Invoke((Action)delegate
+              {
+                this.WindowState = WindowState.Minimized;
+              });
+            };
       }
 
       // extra buffer to avoid graphics corruption at the tail end of the fade
@@ -683,16 +682,6 @@ namespace Toastify
 
             Title1.Text = NOTHINGS_PLAYING;
             Title2.Text = string.Empty;
-          }
-          else
-          {
-            if (currentTrack != null && currentTrack.IsValid)
-            {
-              toastIcon = currentTrack.CoverArtUrl;
-
-              Title1.Text = currentTrack.Artist;
-              Title2.Text = currentTrack.Track;
-            }
           }
 
           FadeIn(force: true);
